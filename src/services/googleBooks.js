@@ -1,0 +1,36 @@
+// Service for interacting with Google Books API
+
+const BASE_URL = 'https://www.googleapis.com/books/v1/volumes';
+
+export const searchBooks = async (query) => {
+    if (!query) return [];
+
+    try {
+        const response = await fetch(`${BASE_URL}?q=${encodeURIComponent(query)}&maxResults=10&langRestrict=sv`);
+        const data = await response.json();
+
+        if (!data.items) return [];
+
+        return data.items.map(formatBookData);
+    } catch (error) {
+        console.error("Error fetching from Google Books:", error);
+        return [];
+    }
+};
+
+export const formatBookData = (googleBook) => {
+    const info = googleBook.volumeInfo;
+    return {
+        id: googleBook.id,
+        title: info.title,
+        author: info.authors ? info.authors.join(', ') : 'Okänd författare',
+        cover: info.imageLinks?.thumbnail?.replace('http:', 'https:') || null,
+        rating: 0, // Default for new books
+        progress: 0,
+        status: 'Vill läsa', // Default status
+        pages: info.pageCount || 0,
+        published: info.publishedDate?.substring(0, 4) || 'Okänt år',
+        synopsis: info.description || 'Ingen beskrivning tillgänglig.',
+        categories: info.categories || []
+    };
+};
