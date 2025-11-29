@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import { BookOpen, MessageCircle, Library, User } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const Layout = () => {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -13,15 +16,16 @@ const Layout = () => {
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
-            <Link to="/" className="text-gray-600 hover:text-accent font-medium">Hem</Link>
-            <Link to="/books" className="text-gray-600 hover:text-accent font-medium">Mina Böcker</Link>
-            <Link to="/recommendations" className="text-gray-600 hover:text-accent font-medium">Rekommendationer</Link>
+            <Link to="/" className="text-gray-600 hover:text-accent font-medium">{t('nav.home')}</Link>
+            <Link to="/books" className="text-gray-600 hover:text-accent font-medium">{t('nav.myBooks')}</Link>
+            <Link to="/recommendations" className="text-gray-600 hover:text-accent font-medium">{t('nav.recommendations')}</Link>
           </nav>
 
           <div className="flex items-center gap-4">
+            <LanguageSwitcher />
             <button className="btn btn-secondary flex items-center gap-2">
               <MessageCircle size={20} />
-              <span>Prata med Bibbi</span>
+              <span>{t('nav.talkToBibbi')}</span>
             </button>
             <Link to="/profile" className="p-2 text-gray-400 hover:text-accent rounded-full">
               <User size={24} />

@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { LanguageProvider } from './context/LanguageContext';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import MyBooks from './pages/MyBooks';
@@ -9,18 +10,20 @@ import Profile from './pages/Profile';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="books" element={<MyBooks />} />
-          <Route path="book/:id" element={<BookDetail />} />
-          <Route path="recommendations" element={<Recommendations />} />
-          <Route path="profile" element={<Profile />} />
-          {/* Add more routes here as needed */}
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <LanguageProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="books" element={<MyBooks />} />
+            <Route path="book/:id" element={<BookDetail />} />
+            <Route path="recommendations" element={<Recommendations />} />
+            <Route path="profile" element={<Profile />} />
+            {/* Add more routes here as needed */}
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </LanguageProvider>
   );
 }
 

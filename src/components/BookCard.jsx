@@ -1,8 +1,10 @@
 import React from 'react';
 import { Star, Book } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 const BookCard = ({ id, title, author, cover, rating, progress, status, vibe, tempo }) => {
+    const { t } = useLanguage();
     return (
         <Link to={`/book/${id}`} className="card flex flex-col h-full group hover:no-underline">
             <div className="relative aspect-[2/3] bg-gray-200 rounded-md mb-4 overflow-hidden">
@@ -15,7 +17,7 @@ const BookCard = ({ id, title, author, cover, rating, progress, status, vibe, te
                 )}
                 {status && (
                     <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-semibold text-gray-700 shadow-sm">
-                        {status}
+                        {t(`status.${status}`) || status}
                     </div>
                 )}
             </div>

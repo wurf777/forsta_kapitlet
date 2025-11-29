@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { getUserProfile, updateUserProfile, exportData, importData, getUniqueAuthors, getUniqueGenres } from '../services/storage';
+import { useLanguage } from '../context/LanguageContext';
 
 const Profile = () => {
+    const { t } = useLanguage();
     const [profile, setProfile] = useState(getUserProfile());
     const [newFavAuthor, setNewFavAuthor] = useState('');
     const [newFavGenre, setNewFavGenre] = useState('');
@@ -69,29 +71,29 @@ const Profile = () => {
             setProfile(getUserProfile()); // Refresh state
             setAuthorSuggestions(getUniqueAuthors()); // Refresh suggestions
             setGenreSuggestions(getUniqueGenres());
-            alert('Data importerad! Sidan laddas om.');
+            alert(t('profile.importSuccess'));
             window.location.reload();
         } catch (error) {
-            alert('Fel vid import: ' + error.message);
+            alert(t('profile.importError') + ' ' + error.message);
         }
     };
 
     return (
         <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-serif font-bold text-stone-900 mb-2">Din Smakprofil</h1>
-            <p className="text-stone-600 mb-8">Hjälp Bibbi att förstå vad du gillar – och vad du vill slippa.</p>
+            <h1 className="text-3xl font-serif font-bold text-stone-900 mb-2">{t('profile.title')}</h1>
+            <p className="text-stone-600 mb-8">{t('profile.subtitle')}</p>
 
             <div className="grid md:grid-cols-2 gap-6 mb-8">
                 {/* Favorites Column */}
                 <div>
-                    <Section title="❤️ Favoriter">
+                    <Section title={`❤️ ${t('profile.favorites')}`}>
                         <div className="mb-6">
-                            <h3 className="font-medium text-stone-700 mb-2">Författare</h3>
+                            <h3 className="font-medium text-stone-700 mb-2">{t('profile.authors')}</h3>
                             <ListInput
                                 value={newFavAuthor}
                                 onChange={setNewFavAuthor}
                                 onAdd={() => addItem('favoriteAuthors', newFavAuthor, setNewFavAuthor)}
-                                placeholder="T.ex. Astrid Lindgren"
+                                placeholder={t('profile.authorPlaceholder')}
                                 list="authors"
                                 suggestions={authorSuggestions}
                             />
@@ -99,12 +101,12 @@ const Profile = () => {
                         </div>
 
                         <div>
-                            <h3 className="font-medium text-stone-700 mb-2">Genrer</h3>
+                            <h3 className="font-medium text-stone-700 mb-2">{t('profile.genres')}</h3>
                             <ListInput
                                 value={newFavGenre}
                                 onChange={setNewFavGenre}
                                 onAdd={() => addItem('favoriteGenres', newFavGenre, setNewFavGenre)}
-                                placeholder="T.ex. Deckare, Sci-Fi"
+                                placeholder={t('profile.genrePlaceholder')}
                                 list="genres"
                                 suggestions={genreSuggestions}
                             />
@@ -115,14 +117,14 @@ const Profile = () => {
 
                 {/* Blocklist Column */}
                 <div>
-                    <Section title="🚫 Blocklista (Visa aldrig)">
+                    <Section title={`🚫 ${t('profile.blocklist')}`}>
                         <div className="mb-6">
-                            <h3 className="font-medium text-stone-700 mb-2">Författare</h3>
+                            <h3 className="font-medium text-stone-700 mb-2">{t('profile.authors')}</h3>
                             <ListInput
                                 value={newBlockAuthor}
                                 onChange={setNewBlockAuthor}
                                 onAdd={() => addItem('authors', newBlockAuthor, setNewBlockAuthor, true)}
-                                placeholder="Författare du vill undvika"
+                                placeholder={t('profile.blockAuthorPlaceholder')}
                                 list="authors"
                                 suggestions={authorSuggestions}
                             />
@@ -130,12 +132,12 @@ const Profile = () => {
                         </div>
 
                         <div>
-                            <h3 className="font-medium text-stone-700 mb-2">Genrer / Ämnen</h3>
+                            <h3 className="font-medium text-stone-700 mb-2">{t('profile.genres')}</h3>
                             <ListInput
                                 value={newBlockGenre}
                                 onChange={setNewBlockGenre}
                                 onAdd={() => addItem('genres', newBlockGenre, setNewBlockGenre, true)}
-                                placeholder="T.ex. Skräck, True Crime"
+                                placeholder={t('profile.blockGenrePlaceholder')}
                                 list="genres"
                                 suggestions={genreSuggestions}
                             />
@@ -146,21 +148,20 @@ const Profile = () => {
             </div>
 
             {/* Data Management Section */}
-            <Section title="💾 Datahantering">
+            <Section title={`💾 ${t('profile.dataManagement')}`}>
                 <p className="text-stone-600 mb-4 text-sm">
-                    Spara ner din data (böcker och profil) till en fil, eller återställ från en tidigare backup.
-                    Bra att ha om du byter webbläsare eller vill vara säker på att inget försvinner.
+                    {t('profile.dataSubtitle')}
                 </p>
                 <div className="flex gap-4">
                     <button
                         onClick={handleExport}
                         className="px-4 py-2 bg-stone-200 text-stone-800 rounded-lg hover:bg-stone-300 transition-colors font-medium"
                     >
-                        Exportera Data
+                        {t('profile.export')}
                     </button>
 
                     <label className="px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors font-medium cursor-pointer">
-                        Importera Data
+                        {t('profile.import')}
                         <input
                             type="file"
                             accept=".json"
@@ -203,6 +204,7 @@ const ListInput = ({ value, onChange, onAdd, placeholder, list, suggestions = []
             onClick={onAdd}
             className="px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors"
         >
+            {/* We need to pass t here or use it inside ListInput if we want to translate 'Add' */}
             Lägg till
         </button>
     </div>

@@ -3,8 +3,10 @@ import BookCard from '../components/BookCard';
 import BookSearch from '../components/BookSearch';
 import { Filter } from 'lucide-react';
 import { getLibrary } from '../services/storage';
+import { useLanguage } from '../context/LanguageContext';
 
 const MyBooks = () => {
+    const { t } = useLanguage();
     const [filter, setFilter] = useState('Alla');
     const [books, setBooks] = useState([]);
 
@@ -24,14 +26,14 @@ const MyBooks = () => {
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-heading text-gray-900">Mina Böcker</h1>
-                    <p className="text-gray-600">Din personliga samling av lästa och kommande äventyr.</p>
+                    <h1 className="text-3xl font-heading text-gray-900">{t('myBooks.title')}</h1>
+                    <p className="text-gray-600">{t('myBooks.subtitle')}</p>
                 </div>
             </div>
 
             {/* Search Component */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                <h3 className="font-semibold text-gray-900 mb-3">Lägg till ny bok</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">{t('myBooks.addNewBook')}</h3>
                 <BookSearch onBookAdded={loadBooks} />
             </div>
 
@@ -42,16 +44,26 @@ const MyBooks = () => {
                         ? books.length
                         : books.filter(b => b.status === tab).length;
 
+                    const getTabLabel = (status) => {
+                        switch (status) {
+                            case 'Alla': return t('myBooks.all');
+                            case 'Läser': return t('myBooks.reading');
+                            case 'Vill läsa': return t('myBooks.wantToRead');
+                            case 'Läst': return t('myBooks.read');
+                            default: return status;
+                        }
+                    };
+
                     return (
                         <button
                             key={tab}
                             onClick={() => setFilter(tab)}
                             className={`px-6 py-3 font-medium text-sm whitespace-nowrap transition-colors border-b-2 ${filter === tab
-                                    ? 'border-accent text-accent'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                ? 'border-accent text-accent'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
                                 }`}
                         >
-                            {tab} ({count})
+                            {getTabLabel(tab)} ({count})
                         </button>
                     );
                 })}
@@ -68,11 +80,11 @@ const MyBooks = () => {
                 <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
                     <p className="text-gray-500 text-lg mb-2">
                         {filter === 'Alla'
-                            ? 'Ditt bibliotek är tomt'
-                            : `Inga böcker i kategorin "${filter}"`}
+                            ? t('myBooks.emptyLibrary')
+                            : `${t('myBooks.emptyCategory')} "${filter}"`}
                     </p>
                     <p className="text-gray-400 text-sm">
-                        Använd sökfältet ovan för att lägga till böcker!
+                        {t('myBooks.useSearch')}
                     </p>
                 </div>
             )}

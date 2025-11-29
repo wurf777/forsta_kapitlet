@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus, Loader2 } from 'lucide-react';
 import { searchBooks } from '../services/googleBooks';
 import { addToLibrary } from '../services/storage';
+import { useLanguage } from '../context/LanguageContext';
 
 const BookSearch = ({ onBookAdded }) => {
+    const { t } = useLanguage();
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -34,7 +36,7 @@ const BookSearch = ({ onBookAdded }) => {
             setShowResults(false);
             onBookAdded?.();
         } else {
-            alert('Den här boken finns redan i ditt bibliotek!');
+            alert(t('search.alreadyExists'));
         }
     };
 
@@ -46,7 +48,7 @@ const BookSearch = ({ onBookAdded }) => {
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Sök efter böcker att lägga till..."
+                    placeholder={t('search.placeholder')}
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
                 />
                 {isSearching && (
@@ -81,7 +83,7 @@ const BookSearch = ({ onBookAdded }) => {
                                 <button
                                     onClick={() => handleAddBook(book)}
                                     className="flex-shrink-0 p-2 text-accent hover:bg-accent-light rounded-md transition-colors"
-                                    title="Lägg till i biblioteket"
+                                    title={t('search.addToLibrary')}
                                 >
                                     <Plus size={20} />
                                 </button>
@@ -106,7 +108,7 @@ const BookSearch = ({ onBookAdded }) => {
 
             {showResults && results.length === 0 && !isSearching && (
                 <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center text-gray-500">
-                    Inga böcker hittades för "{query}"
+                    {t('search.noResults')} "{query}"
                 </div>
             )}
         </div>

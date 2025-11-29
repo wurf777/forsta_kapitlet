@@ -4,7 +4,10 @@ import BookRecommendationsList from '../components/BookRecommendationsList';
 import ModeSelector from '../components/ModeSelector';
 import { Sparkles } from 'lucide-react';
 
+import { useLanguage } from '../context/LanguageContext';
+
 const Recommendations = () => {
+    const { t } = useLanguage();
     const [modes, setModes] = useState({
         length: 3,
         mood: 3,
@@ -19,9 +22,9 @@ const Recommendations = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 text-accent mb-2">
                     <Sparkles size={32} />
                 </div>
-                <h1 className="text-4xl font-heading text-gray-900">Prata med Bibbi</h1>
+                <h1 className="text-4xl font-heading text-gray-900">{t('recommendations.title')}</h1>
                 <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                    Bibbi är vår AI-expert på litteratur. Berätta vad du gillar, vad du känner för, eller be om något helt oväntat.
+                    {t('recommendations.subtitle')}
                 </p>
             </div>
 
@@ -44,16 +47,16 @@ const Recommendations = () => {
             {/* Feature cards */}
             <div className="grid md:grid-cols-3 gap-6 mt-12">
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center">
-                    <h3 className="font-bold text-gray-900 mb-2">Personligt</h3>
-                    <p className="text-sm text-gray-600">Bibbi lär sig vad du gillar och ger bättre tips ju mer ni pratar.</p>
+                    <h3 className="font-bold text-gray-900 mb-2">{t('recommendations.personal')}</h3>
+                    <p className="text-sm text-gray-600">{t('recommendations.personalDesc')}</p>
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center">
-                    <h3 className="font-bold text-gray-900 mb-2">Utforskande</h3>
-                    <p className="text-sm text-gray-600">Hitta nya genrer och författare som du kanske missat annars.</p>
+                    <h3 className="font-bold text-gray-900 mb-2">{t('recommendations.exploratory')}</h3>
+                    <p className="text-sm text-gray-600">{t('recommendations.exploratoryDesc')}</p>
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center">
-                    <h3 className="font-bold text-gray-900 mb-2">Alltid redo</h3>
-                    <p className="text-sm text-gray-600">Oavsett tid på dygnet finns Bibbi här för att diskutera böcker.</p>
+                    <h3 className="font-bold text-gray-900 mb-2">{t('recommendations.alwaysReady')}</h3>
+                    <p className="text-sm text-gray-600">{t('recommendations.alwaysReadyDesc')}</p>
                 </div>
             </div>
         </div>

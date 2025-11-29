@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Star, ArrowLeft, MessageCircle, BookOpen, Calendar, User, Trash2 } from 'lucide-react';
 import { getBookById, updateBookStatus, removeFromLibrary } from '../services/storage';
+import { useLanguage } from '../context/LanguageContext';
 
 const BookDetail = () => {
+    const { t } = useLanguage();
     const { id } = useParams();
     const navigate = useNavigate();
     const [book, setBook] = useState(null);
@@ -36,7 +38,7 @@ const BookDetail = () => {
     };
 
     const handleDelete = () => {
-        if (window.confirm(`Är du säker på att du vill ta bort "${book.title}" från ditt bibliotek?`)) {
+        if (window.confirm(`${t('bookDetail.deleteConfirm')} "${book.title}"?`)) {
             removeFromLibrary(id);
             navigate('/books');
         }
@@ -45,9 +47,9 @@ const BookDetail = () => {
     if (!book) {
         return (
             <div className="max-w-4xl mx-auto text-center py-12">
-                <p className="text-gray-500">Boken hittades inte i ditt bibliotek.</p>
+                <p className="text-gray-500">{t('bookDetail.notFound')}</p>
                 <Link to="/books" className="text-accent hover:underline mt-4 inline-block">
-                    Tillbaka till biblioteket
+                    {t('bookDetail.backToLibrary')}
                 </Link>
             </div>
         );
@@ -57,7 +59,7 @@ const BookDetail = () => {
         <div className="max-w-4xl mx-auto">
             <Link to="/books" className="inline-flex items-center gap-2 text-gray-500 hover:text-accent mb-6 transition-colors">
                 <ArrowLeft size={20} />
-                Tillbaka till biblioteket
+                {t('bookDetail.backToLibrary')}
             </Link>
 
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -96,7 +98,7 @@ const BookDetail = () => {
                             {book.pages > 0 && (
                                 <span className="flex items-center gap-1">
                                     <BookOpen size={16} />
-                                    {book.pages} sidor
+                                    {book.pages} {t('bookDetail.pages')}
                                 </span>
                             )}
                             <div className="flex items-center gap-1 text-yellow-500">
@@ -107,7 +109,7 @@ const BookDetail = () => {
                         </div>
 
                         <div className="mb-8">
-                            <h3 className="font-bold text-gray-900 mb-2">Handling</h3>
+                            <h3 className="font-bold text-gray-900 mb-2">{t('bookDetail.synopsis')}</h3>
                             <p className="text-gray-600 leading-relaxed">{book.synopsis}</p>
                         </div>
 
@@ -115,7 +117,7 @@ const BookDetail = () => {
                             <div className="mb-8 bg-accent/5 p-4 rounded-lg border border-accent/10">
                                 <h3 className="font-bold text-accent mb-2 flex items-center gap-2">
                                     <MessageCircle size={18} />
-                                    Bibbi's motivering
+                                    {t('bookDetail.bibbiReason')}
                                 </h3>
                                 <p className="text-gray-700 italic">"{book.recommendationReason}"</p>
                             </div>
@@ -124,19 +126,19 @@ const BookDetail = () => {
                         {isEditing ? (
                             <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('bookDetail.status')}</label>
                                     <select
                                         value={editedStatus}
                                         onChange={(e) => setEditedStatus(e.target.value)}
                                         className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:border-accent"
                                     >
-                                        <option>Vill läsa</option>
-                                        <option>Läser</option>
-                                        <option>Läst</option>
+                                        <option value="Vill läsa">{t('bookDetail.wantToRead')}</option>
+                                        <option value="Läser">{t('bookDetail.reading')}</option>
+                                        <option value="Läst">{t('bookDetail.read')}</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Framsteg (%)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('bookDetail.progress')} (%)</label>
                                     <input
                                         type="number"
                                         min="0"
@@ -147,7 +149,7 @@ const BookDetail = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Betyg</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('bookDetail.rating')}</label>
                                     <div className="flex gap-2">
                                         {[1, 2, 3, 4, 5].map((star) => (
                                             <button
@@ -162,23 +164,22 @@ const BookDetail = () => {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Mina anteckningar
-                                        <span className="text-gray-500 font-normal ml-2">(Vad tyckte du om boken?)</span>
+                                        {t('bookDetail.myNotes')}
                                     </label>
                                     <textarea
                                         value={editedNotes}
                                         onChange={(e) => setEditedNotes(e.target.value)}
-                                        placeholder="Skriv dina tankar om boken här... Detta hjälper Bibbi ge dig bättre rekommendationer!"
+                                        placeholder={t('bookDetail.notesPlaceholder')}
                                         rows="4"
                                         className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:border-accent resize-none"
                                     />
                                 </div>
                                 <div className="flex gap-2">
                                     <button onClick={handleSave} className="btn btn-primary flex-1">
-                                        Spara
+                                        {t('bookDetail.save')}
                                     </button>
                                     <button onClick={() => setIsEditing(false)} className="btn btn-secondary flex-1">
-                                        Avbryt
+                                        {t('bookDetail.cancel')}
                                     </button>
                                 </div>
                             </div>
@@ -186,17 +187,17 @@ const BookDetail = () => {
                             <div className="space-y-4">
                                 {book.notes && (
                                     <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
-                                        <h3 className="font-bold text-amber-900 mb-2">📝 Mina anteckningar</h3>
+                                        <h3 className="font-bold text-amber-900 mb-2">📝 {t('bookDetail.myNotes')}</h3>
                                         <p className="text-gray-700 whitespace-pre-wrap">{book.notes}</p>
                                     </div>
                                 )}
                                 <div className="flex flex-col sm:flex-row gap-4">
                                     <button onClick={() => setIsEditing(true)} className="btn btn-primary flex-1">
-                                        {book.notes ? 'Uppdatera status & anteckningar' : 'Uppdatera status'}
+                                        {book.notes ? t('bookDetail.updateStatusAndNotes') : t('bookDetail.updateStatus')}
                                     </button>
                                     <Link to="/recommendations" className="btn btn-secondary flex-1 flex items-center justify-center gap-2">
                                         <MessageCircle size={20} />
-                                        Prata med Bibbi om boken
+                                        {t('bookDetail.talkToBibbi')}
                                     </Link>
                                 </div>
                                 <button
@@ -204,7 +205,7 @@ const BookDetail = () => {
                                     className="w-full btn bg-red-50 text-red-600 hover:bg-red-100 border-red-200 flex items-center justify-center gap-2"
                                 >
                                     <Trash2 size={20} />
-                                    Ta bort från biblioteket
+                                    {t('bookDetail.removeFromLibrary')}
                                 </button>
                             </div>
                         )}

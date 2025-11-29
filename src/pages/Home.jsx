@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight, Book, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getLibrary } from '../services/storage';
+import { useLanguage } from '../context/LanguageContext';
 
 const Home = () => {
+    const { t } = useLanguage();
     const [currentlyReading, setCurrentlyReading] = useState([]);
 
     useEffect(() => {
@@ -17,17 +19,17 @@ const Home = () => {
             {/* Hero Section */}
             <section className="text-center py-12 space-y-6">
                 <h1 className="text-5xl font-heading text-gray-900">
-                    Hitta din nästa <span className="text-accent">favoritbok</span>
+                    {t('home.heroTitle')} <span className="text-accent">{t('home.heroTitleHighlight')}</span>
                 </h1>
                 <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                    Välkommen till Första Kapitlet. Samla dina böcker, få personliga rekommendationer av Bibbi, och upptäck nya världar.
+                    {t('home.subtitle')}
                 </p>
                 <div className="flex justify-center gap-4 pt-4">
                     <Link to="/recommendations" className="btn btn-primary text-lg px-8 py-3">
-                        Få boktips
+                        {t('home.getRecommendations')}
                     </Link>
                     <Link to="/books" className="btn btn-secondary text-lg px-8 py-3">
-                        Mitt bibliotek
+                        {t('home.myLibrary')}
                     </Link>
                 </div>
             </section>
@@ -36,9 +38,9 @@ const Home = () => {
             {currentlyReading.length > 0 && (
                 <section>
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-heading">Läser just nu</h2>
+                        <h2 className="text-2xl font-heading">{t('home.readingNow')}</h2>
                         <Link to="/books" className="text-accent hover:underline flex items-center gap-1">
-                            Se alla <ArrowRight size={16} />
+                            {t('home.seeAll')} <ArrowRight size={16} />
                         </Link>
                     </div>
 
@@ -70,7 +72,7 @@ const Home = () => {
                                             <div className="w-full bg-gray-200 rounded-full h-2 mt-4">
                                                 <div className="bg-accent h-2 rounded-full" style={{ width: `${book.progress}%` }}></div>
                                             </div>
-                                            <p className="text-xs text-gray-500 text-right mt-1">{book.progress}% klart</p>
+                                            <p className="text-xs text-gray-500 text-right mt-1">{book.progress}% {t('home.progress')}</p>
                                         </>
                                     )}
                                 </div>
@@ -84,12 +86,12 @@ const Home = () => {
             {currentlyReading.length === 0 && (
                 <section className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
                     <Book size={48} className="mx-auto text-gray-300 mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-700 mb-2">Börja din läsresa!</h3>
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">{t('home.startJourney')}</h3>
                     <p className="text-gray-500 mb-6">
-                        Du har inga böcker i ditt bibliotek än. Lägg till din första bok för att komma igång.
+                        {t('home.emptyLibrary')}
                     </p>
                     <Link to="/books" className="btn btn-primary">
-                        Lägg till böcker
+                        {t('home.addBooks')}
                     </Link>
                 </section>
             )}

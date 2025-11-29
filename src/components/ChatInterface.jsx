@@ -2,13 +2,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, User, Sparkles } from 'lucide-react';
 import { sendMessageToBibbi } from '../services/gemini';
 import { getUserProfile } from '../services/storage';
+import { useLanguage } from '../context/LanguageContext';
 
 const ChatInterface = ({ modes }) => {
+    const { t } = useLanguage();
     const [messages, setMessages] = useState([
         {
             id: 1,
             sender: 'bibbi',
-            text: 'Hej! Jag är Bibbi. Jag älskar böcker och att hitta rätt bok till rätt person. Vad är du sugen på att läsa idag?'
+            text: t('chat.welcome')
         }
     ]);
     const [input, setInput] = useState('');
@@ -54,8 +56,8 @@ const ChatInterface = ({ modes }) => {
                     <Sparkles size={20} />
                 </div>
                 <div>
-                    <h3 className="font-heading font-bold text-gray-900">Bibbi</h3>
-                    <p className="text-xs text-accent font-medium">Din personliga bokguide</p>
+                    <h3 className="font-heading font-bold text-gray-900">{t('chat.bibbiName')}</h3>
+                    <p className="text-xs text-accent font-medium">{t('chat.bibbiRole')}</p>
                 </div>
             </div>
 
@@ -97,7 +99,7 @@ const ChatInterface = ({ modes }) => {
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Skriv till Bibbi..."
+                        placeholder={t('chat.placeholder')}
                         className="flex-grow px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
                     />
                     <button

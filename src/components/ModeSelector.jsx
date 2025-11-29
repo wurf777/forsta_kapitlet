@@ -1,6 +1,9 @@
 import React from 'react';
 
+import { useLanguage } from '../context/LanguageContext';
+
 const ModeSelector = ({ modes, onChange }) => {
+    const { t } = useLanguage();
     const handleSliderChange = (key, value) => {
         onChange({ ...modes, [key]: parseInt(value) });
     };
@@ -41,8 +44,8 @@ const ModeSelector = ({ modes, onChange }) => {
             <button
                 onClick={() => toggleChip(label)}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${isSelected
-                        ? 'bg-stone-800 text-white border-stone-800'
-                        : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400'
+                    ? 'bg-stone-800 text-white border-stone-800'
+                    : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400'
                     }`}
             >
                 {label}
@@ -55,39 +58,43 @@ const ModeSelector = ({ modes, onChange }) => {
         "Romantiskt", "Obehagligt", "Tänkvärt", "Snabbläst"
     ];
 
+    const getVibeLabel = (vibe) => {
+        return t(`modeSelector.vibes.${vibe}`) || vibe;
+    };
+
     return (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-100 mb-8">
-            <h2 className="text-lg font-serif font-bold text-stone-800 mb-4">Hur vill du läsa just nu?</h2>
+            <h2 className="text-lg font-serif font-bold text-stone-800 mb-4">{t('modeSelector.title')}</h2>
 
             <div className="space-y-2 mb-8">
                 <Slider
-                    label="Längd"
-                    leftLabel="Kort & Snabbt"
-                    rightLabel="Långt & Episkt"
+                    label={t('modeSelector.length')}
+                    leftLabel={t('modeSelector.shortFast')}
+                    rightLabel={t('modeSelector.longEpic')}
                     value={modes.length}
                     onChange={(v) => handleSliderChange('length', v)}
                 />
                 <Slider
-                    label="Stämning"
-                    leftLabel="Ljust & Hoppfullt"
-                    rightLabel="Mörkt & Tungt"
+                    label={t('modeSelector.mood')}
+                    leftLabel={t('modeSelector.lightHopeful')}
+                    rightLabel={t('modeSelector.darkHeavy')}
                     value={modes.mood}
                     onChange={(v) => handleSliderChange('mood', v)}
                 />
                 <Slider
-                    label="Tempo"
-                    leftLabel="Långsamt & Reflekterande"
-                    rightLabel="Högt & Actionfyllt"
+                    label={t('modeSelector.tempo')}
+                    leftLabel={t('modeSelector.slowReflective')}
+                    rightLabel={t('modeSelector.highAction')}
                     value={modes.tempo}
                     onChange={(v) => handleSliderChange('tempo', v)}
                 />
             </div>
 
             <div>
-                <h3 className="text-sm font-medium text-stone-700 mb-3">Känsla / Vibe</h3>
+                <h3 className="text-sm font-medium text-stone-700 mb-3">{t('modeSelector.vibe')}</h3>
                 <div className="flex flex-wrap gap-2">
                     {VIBES.map(vibe => (
-                        <Chip key={vibe} label={vibe} />
+                        <Chip key={vibe} label={getVibeLabel(vibe)} />
                     ))}
                 </div>
             </div>
