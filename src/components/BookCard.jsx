@@ -2,7 +2,7 @@ import React from 'react';
 import { Star, Book } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const BookCard = ({ id, title, author, cover, rating, progress, status }) => {
+const BookCard = ({ id, title, author, cover, rating, progress, status, vibe, tempo }) => {
     return (
         <Link to={`/book/${id}`} className="card flex flex-col h-full group hover:no-underline">
             <div className="relative aspect-[2/3] bg-gray-200 rounded-md mb-4 overflow-hidden">
@@ -23,6 +23,22 @@ const BookCard = ({ id, title, author, cover, rating, progress, status }) => {
             <div className="flex-grow">
                 <h3 className="font-bold text-gray-900 leading-tight mb-1">{title}</h3>
                 <p className="text-sm text-gray-600 mb-2">{author}</p>
+
+                {/* AI Metadata Badges */}
+                {(vibe || tempo) && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                        {vibe && (
+                            <span className="text-[10px] px-1.5 py-0.5 bg-purple-50 text-purple-700 rounded border border-purple-100 truncate max-w-full">
+                                ✨ {vibe}
+                            </span>
+                        )}
+                        {tempo && (
+                            <span className="text-[10px] px-1.5 py-0.5 bg-stone-100 text-stone-600 rounded border border-stone-200">
+                                ⚡ {tempo}/5
+                            </span>
+                        )}
+                    </div>
+                )}
 
                 {rating > 0 && (
                     <div className="flex items-center gap-1 text-yellow-500 mb-3">

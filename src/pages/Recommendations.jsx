@@ -1,9 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ChatInterface from '../components/ChatInterface';
 import BookRecommendationsList from '../components/BookRecommendationsList';
+import ModeSelector from '../components/ModeSelector';
 import { Sparkles } from 'lucide-react';
 
 const Recommendations = () => {
+    const [modes, setModes] = useState({
+        length: 3,
+        mood: 3,
+        tempo: 3,
+        vibes: []
+    });
+
     return (
         <div className="space-y-8">
             {/* Page header */}
@@ -27,7 +35,8 @@ const Recommendations = () => {
                 {/* Right column - Chat Interface */}
                 <div className="lg:col-span-7">
                     <div className="lg:sticky lg:top-6">
-                        <ChatInterface />
+                        <ModeSelector modes={modes} onChange={setModes} />
+                        <ChatInterface modes={modes} />
                     </div>
                 </div>
             </div>

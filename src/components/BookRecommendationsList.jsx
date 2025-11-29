@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Sparkles, Plus, Loader2 } from 'lucide-react';
-import { getBookRecommendations } from '../services/gemini';
+import { getBookRecommendations, enrichBookData } from '../services/gemini';
 import { searchBooks } from '../services/googleBooks';
-import { addToLibrary } from '../services/storage';
+import { addToLibrary, getUserProfile } from '../services/storage';
 
 const BookRecommendationsList = () => {
     const [recommendations, setRecommendations] = useState([]);
@@ -18,22 +18,28 @@ const BookRecommendationsList = () => {
 
         try {
             // Get recommendations from Gemini
-            const recs = await getBookRecommendations();
+            const profile = getUserProfile();
+            const recs = await getBookRecommendations(null, profile);
             setRecommendations(recs);
 
-            // Enrich with Google Books data
+            // Enrich with Google Books data AND AI metadata
             const enriched = await Promise.all(
                 recs.map(async (rec) => {
                     try {
-                        const results = await searchBooks(`${rec.title} ${rec.author}`);
-                        const bookData = results[0]; // Take first result
+                        const [googleResults, aiMetadata] = await Promise.all([
+                            searchBooks(`${rec.title} ${rec.author}`),
+                            enrichBookData(rec.title, rec.author)
+                        ]);
+
+                        const bookData = googleResults[0]; // Take first result
                         return {
                             ...rec,
-                            googleBook: bookData || null
+                            googleBook: bookData || null,
+                            aiMetadata: aiMetadata || null
                         };
                     } catch (err) {
                         console.error(`Failed to fetch data for ${rec.title}:`, err);
-                        return { ...rec, googleBook: null };
+                        return { ...rec, googleBook: null, aiMetadata: null };
                     }
                 })
             );
@@ -48,7 +54,17 @@ const BookRecommendationsList = () => {
 
     const handleAddBook = (book) => {
         if (book.googleBook) {
-            const success = addToLibrary(book.googleBook);
+            const bookToAdd = {
+                ...book.googleBook,
+                // Merge AI metadata if available
+                categories: book.aiMetadata?.genre_specifics ? [book.aiMetadata.genre_specifics, ...book.googleBook.categories] : book.googleBook.categories,
+                vibe: book.aiMetadata?.vibe,
+                tempo: book.aiMetadata?.tempo,
+                themes: book.aiMetadata?.themes,
+                recommendationReason: book.reason // Persist the reason why Bibbi recommended this
+            };
+
+            const success = addToLibrary(bookToAdd);
             if (success) {
                 alert(`"${book.title}" har lagts till i din boklista!`);
             } else {
@@ -113,29 +129,60 @@ const BookRecommendationsList = () => {
                             >
                                 <div className="flex gap-4">
                                     {/* Book cover */}
-                                    {book.googleBook?.imageLinks?.thumbnail ? (
+                                    {book.googleBook?.cover ? (
                                         <img
-                                            src={book.googleBook.imageLinks.thumbnail}
+                                            src={book.googleBook.cover}
                                             alt={book.title}
-                                            className="w-16 h-24 object-cover rounded shadow-sm flex-shrink-0"
+                                            className="w-20 h-32 object-cover rounded shadow-sm flex-shrink-0"
                                         />
                                     ) : (
-                                        <div className="w-16 h-24 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
+                                        <div className="w-20 h-32 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
                                             <span className="text-gray-400 text-xs">Ingen bild</span>
                                         </div>
                                     )}
 
                                     {/* Book info */}
                                     <div className="flex-grow min-w-0">
-                                        <h4 className="font-bold text-gray-900 truncate">
-                                            {book.title}
-                                        </h4>
-                                        <p className="text-sm text-gray-600 mb-2">
-                                            av {book.author}
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h4 className="font-bold text-gray-900 truncate text-lg">
+                                                    {book.title}
+                                                </h4>
+                                                <p className="text-stone-600 mb-2 font-medium">
+                                                    av {book.author}
+                                                </p>
+                                            </div>
+                                            {book.aiMetadata?.tempo && (
+                                                <span className="text-xs font-bold px-2 py-1 bg-stone-100 rounded text-stone-600" title="Tempo">
+                                                    ⚡ {book.aiMetadata.tempo}/5
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <p className="text-sm text-gray-700 mb-3 italic">
+                                            "{book.reason}"
                                         </p>
-                                        <p className="text-sm text-gray-700 line-clamp-2">
-                                            {book.reason}
-                                        </p>
+
+                                        {/* Metadata Chips */}
+                                        {book.aiMetadata && (
+                                            <div className="flex flex-wrap gap-2 mb-2">
+                                                {book.aiMetadata.vibe && (
+                                                    <span className="text-xs px-2 py-1 bg-purple-50 text-purple-700 rounded-full border border-purple-100">
+                                                        ✨ {book.aiMetadata.vibe}
+                                                    </span>
+                                                )}
+                                                {book.aiMetadata.genre_specifics && (
+                                                    <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-100">
+                                                        📚 {book.aiMetadata.genre_specifics}
+                                                    </span>
+                                                )}
+                                                {book.aiMetadata.themes?.slice(0, 2).map(theme => (
+                                                    <span key={theme} className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                                                        {theme}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Add button */}

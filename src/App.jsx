@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import MyBooks from './pages/MyBooks';
 import BookDetail from './pages/BookDetail';
 import Recommendations from './pages/Recommendations';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="books" element={<MyBooks />} />
           <Route path="book/:id" element={<BookDetail />} />
           <Route path="recommendations" element={<Recommendations />} />
+          <Route path="profile" element={<Profile />} />
           {/* Add more routes here as needed */}
         </Route>
       </Routes>

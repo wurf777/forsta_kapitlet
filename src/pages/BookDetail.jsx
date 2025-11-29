@@ -11,6 +11,7 @@ const BookDetail = () => {
     const [editedStatus, setEditedStatus] = useState('');
     const [editedProgress, setEditedProgress] = useState(0);
     const [editedRating, setEditedRating] = useState(0);
+    const [editedNotes, setEditedNotes] = useState('');
 
     useEffect(() => {
         const foundBook = getBookById(id);
@@ -19,6 +20,7 @@ const BookDetail = () => {
             setEditedStatus(foundBook.status);
             setEditedProgress(foundBook.progress || 0);
             setEditedRating(foundBook.rating || 0);
+            setEditedNotes(foundBook.notes || '');
         }
     }, [id]);
 
@@ -26,9 +28,10 @@ const BookDetail = () => {
         updateBookStatus(id, {
             status: editedStatus,
             progress: editedProgress,
-            rating: editedRating
+            rating: editedRating,
+            notes: editedNotes
         });
-        setBook({ ...book, status: editedStatus, progress: editedProgress, rating: editedRating });
+        setBook({ ...book, status: editedStatus, progress: editedProgress, rating: editedRating, notes: editedNotes });
         setIsEditing(false);
     };
 
@@ -108,6 +111,16 @@ const BookDetail = () => {
                             <p className="text-gray-600 leading-relaxed">{book.synopsis}</p>
                         </div>
 
+                        {book.recommendationReason && (
+                            <div className="mb-8 bg-accent/5 p-4 rounded-lg border border-accent/10">
+                                <h3 className="font-bold text-accent mb-2 flex items-center gap-2">
+                                    <MessageCircle size={18} />
+                                    Bibbi's motivering
+                                </h3>
+                                <p className="text-gray-700 italic">"{book.recommendationReason}"</p>
+                            </div>
+                        )}
+
                         {isEditing ? (
                             <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
                                 <div>
@@ -147,6 +160,19 @@ const BookDetail = () => {
                                         ))}
                                     </div>
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Mina anteckningar
+                                        <span className="text-gray-500 font-normal ml-2">(Vad tyckte du om boken?)</span>
+                                    </label>
+                                    <textarea
+                                        value={editedNotes}
+                                        onChange={(e) => setEditedNotes(e.target.value)}
+                                        placeholder="Skriv dina tankar om boken här... Detta hjälper Bibbi ge dig bättre rekommendationer!"
+                                        rows="4"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:border-accent resize-none"
+                                    />
+                                </div>
                                 <div className="flex gap-2">
                                     <button onClick={handleSave} className="btn btn-primary flex-1">
                                         Spara
@@ -158,9 +184,15 @@ const BookDetail = () => {
                             </div>
                         ) : (
                             <div className="space-y-4">
+                                {book.notes && (
+                                    <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                                        <h3 className="font-bold text-amber-900 mb-2">📝 Mina anteckningar</h3>
+                                        <p className="text-gray-700 whitespace-pre-wrap">{book.notes}</p>
+                                    </div>
+                                )}
                                 <div className="flex flex-col sm:flex-row gap-4">
                                     <button onClick={() => setIsEditing(true)} className="btn btn-primary flex-1">
-                                        Uppdatera status
+                                        {book.notes ? 'Uppdatera status & anteckningar' : 'Uppdatera status'}
                                     </button>
                                     <Link to="/recommendations" className="btn btn-secondary flex-1 flex items-center justify-center gap-2">
                                         <MessageCircle size={20} />

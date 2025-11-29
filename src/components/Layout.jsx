@@ -23,9 +23,9 @@ const Layout = () => {
               <MessageCircle size={20} />
               <span>Prata med Bibbi</span>
             </button>
-            <button className="p-2 text-gray-400 hover:text-accent rounded-full">
+            <Link to="/profile" className="p-2 text-gray-400 hover:text-accent rounded-full">
               <User size={24} />
-            </button>
+            </Link>
           </div>
         </div>
       </header>

@@ -11,7 +11,7 @@ const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
  * @param {Array} history - Conversation history
  * @returns {Promise<string>} - Bibbi's response
  */
-export const sendMessageToBibbi = async (message, history) => {
+export const sendMessageToBibbi = async (message, history, modes = null, profile = null) => {
     if (!genAI) {
         return "Hoppsan! Jag behöver en API-nyckel för att fungera. Lägg till din Gemini API-nyckel i .env filen (VITE_GEMINI_API_KEY).";
     }
@@ -26,6 +26,34 @@ export const sendMessageToBibbi = async (message, history) => {
                 `- "${book.title}" av ${book.authors?.join(', ') || 'Okänd författare'} (Status: ${book.status || 'Vill läsa'})`
             ).join('\n')}`
             : '\n\nAnvändaren har inga böcker i sin lista än.';
+
+        // Build profile context
+        let profileContext = "";
+        if (profile) {
+            const favAuthors = profile.favoriteAuthors?.length > 0 ? `\n- Favoritförfattare: ${profile.favoriteAuthors.join(', ')}` : "";
+            const favGenres = profile.favoriteGenres?.length > 0 ? `\n- Favoritgenrer: ${profile.favoriteGenres.join(', ')}` : "";
+            const blockAuthors = profile.blocklist?.authors?.length > 0 ? `\n- BLOCKERA författare (visa ALDRIG): ${profile.blocklist.authors.join(', ')}` : "";
+            const blockGenres = profile.blocklist?.genres?.length > 0 ? `\n- BLOCKERA genrer/ämnen (visa ALDRIG): ${profile.blocklist.genres.join(', ')}` : "";
+
+            if (favAuthors || favGenres || blockAuthors || blockGenres) {
+                profileContext = `\n\nANVÄNDARPROFIL:${favAuthors}${favGenres}${blockAuthors}${blockGenres}`;
+            }
+        }
+
+        // Build modes context
+        let modesContext = "";
+        if (modes) {
+            const lengthMap = { 1: "Mycket kort/snabbt", 2: "Kort", 3: "Lagom", 4: "Långt", 5: "Episkt/Tegelsten" };
+            const moodMap = { 1: "Ljust & Hoppfullt", 2: "Lättsamt", 3: "Neutralt", 4: "Mörkt", 5: "Mörkt & Tungt" };
+            const tempoMap = { 1: "Långsamt & Reflekterande", 2: "Lugnt", 3: "Normalt", 4: "Snabbt", 5: "Högt & Actionfyllt" };
+
+            const vibes = modes.vibes?.length > 0 ? `\n- Önskad känsla/vibe: ${modes.vibes.join(', ')}` : "";
+
+            modesContext = `\n\nAKTUELLT LÄSLÄGE (Vad användaren vill ha JUST NU):
+- Längd: ${lengthMap[modes.length] || "Lagom"}
+- Stämning: ${moodMap[modes.mood] || "Neutralt"}
+- Tempo: ${tempoMap[modes.tempo] || "Normalt"}${vibes}`;
+        }
 
         // Build conversation history
         const chatHistory = history.map(msg => ({
@@ -44,14 +72,15 @@ PERSONLIGHET:
 - Ställer följdfrågor för att förstå användarens smak bättre
 
 RIKTLINJER:
-- Basera rekommendationer på användarens boklista när det är relevant
-- Förklara VARFÖR en bok skulle passa användaren
+- Basera rekommendationer på användarens boklista, profil och aktuella läsläge
+- VIKTIGT: Respektera ALLTID användarens blocklista. Föreslå ALDRIG författare eller genrer som är blockerade.
+- Förklara VARFÖR en bok skulle passa användaren (t.ex. "Eftersom du gillar X...")
 - Var konkret med titlar och författare
 - Håll svaren lagom långa (2-4 meningar vanligtvis)
 - Undvik att lista för många böcker på en gång (max 2-3 per svar)
 - Var uppmuntrande och positiv
 
-${bookContext}`;
+${bookContext}${profileContext}${modesContext}`;
 
         const chat = model.startChat({
             history: [
@@ -88,7 +117,7 @@ ${bookContext}`;
  * @param {Array} userBooks - User's book library (optional, will fetch from storage if not provided)
  * @returns {Promise<Array>} - Array of book recommendations with title, author, and reason
  */
-export const getBookRecommendations = async (userBooks = null) => {
+export const getBookRecommendations = async (userBooks = null, profile = null) => {
     if (!genAI) {
         throw new Error("API-nyckel saknas. Lägg till VITE_GEMINI_API_KEY i .env filen.");
     }
@@ -107,13 +136,28 @@ export const getBookRecommendations = async (userBooks = null) => {
             `- "${book.title}" av ${book.authors?.join(', ') || 'Okänd författare'} (${book.categories?.join(', ') || 'Ingen genre'})`
         ).join('\n');
 
-        const prompt = `Baserat på följande boklista, ge mig 10 nya bokrekommendationer som användaren skulle uppskatta.
+        // Build profile context
+        let profileContext = "";
+        if (profile) {
+            const favAuthors = profile.favoriteAuthors?.length > 0 ? `\n- Favoritförfattare: ${profile.favoriteAuthors.join(', ')}` : "";
+            const favGenres = profile.favoriteGenres?.length > 0 ? `\n- Favoritgenrer: ${profile.favoriteGenres.join(', ')}` : "";
+            const blockAuthors = profile.blocklist?.authors?.length > 0 ? `\n- BLOCKERA författare (visa ALDRIG): ${profile.blocklist.authors.join(', ')}` : "";
+            const blockGenres = profile.blocklist?.genres?.length > 0 ? `\n- BLOCKERA genrer/ämnen (visa ALDRIG): ${profile.blocklist.genres.join(', ')}` : "";
+
+            if (favAuthors || favGenres || blockAuthors || blockGenres) {
+                profileContext = `\n\nANVÄNDARPROFIL:${favAuthors}${favGenres}${blockAuthors}${blockGenres}`;
+            }
+        }
+
+        const prompt = `Baserat på följande boklista och användarprofil, ge mig 10 nya bokrekommendationer som användaren skulle uppskatta.
 
 ANVÄNDARENS BOKLISTA:
-${bookList}
+${bookList}${profileContext}
 
 INSTRUKTIONER:
 - Analysera genrer, författare, teman och stilar i listan
+- VIKTIGT: Respektera ALLTID användarens blocklista. Föreslå ALDRIG författare eller genrer som är blockerade.
+- Prioritera användarens favoritförfattare och genrer om angivet
 - Ge 10 OLIKA böcker som användaren inte redan har
 - Variera rekommendationerna (inte bara samma genre)
 - Inkludera både klassiker och moderna böcker
@@ -144,5 +188,45 @@ Svara ENDAST med en JSON-array i följande format (ingen annan text):
     } catch (error) {
         console.error('Error getting book recommendations:', error);
         throw error;
+    }
+};
+
+/**
+ * Enrich book data with AI-generated metadata (vibe, tempo, themes)
+ * @param {string} title - Book title
+ * @param {string} author - Book author
+ * @returns {Promise<Object>} - Enriched metadata
+ */
+export const enrichBookData = async (title, author) => {
+    if (!genAI) return null;
+
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+
+        const prompt = `Analysera boken "${title}" av ${author}.
+Ge mig följande metadata i JSON-format:
+- "vibe": En kort sträng som beskriver känslan (t.ex. "Mysig", "Mörk & Tung", "Spännande", "Humoristisk")
+- "tempo": Ett heltal 1-5 (1=Långsamt, 5=Actionfyllt)
+- "themes": En array med 3-5 nyckelteman (på svenska)
+- "genre_specifics": En mer specifik genrebestämning (t.ex. "Psykologisk thriller" istället för bara "Thriller")
+
+Svara ENDAST med JSON:
+{
+  "vibe": "...",
+  "tempo": 3,
+  "themes": ["...", "..."],
+  "genre_specifics": "..."
+}`;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) return null;
+
+        return JSON.parse(jsonMatch[0]);
+    } catch (error) {
+        console.error("Error enriching book data:", error);
+        return null;
     }
 };

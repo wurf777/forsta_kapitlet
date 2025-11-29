@@ -59,31 +59,46 @@ const BookSearch = ({ onBookAdded }) => {
                     {results.map((book) => (
                         <div
                             key={book.id}
-                            className="flex gap-3 p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                            className="group border-b border-gray-100 last:border-b-0 transition-all"
                         >
-                            <div className="w-12 h-16 bg-gray-200 rounded flex-shrink-0 overflow-hidden">
-                                {book.cover ? (
-                                    <img src={book.cover} alt={book.title} className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                                        📚
+                            <div className="flex gap-3 p-3 hover:bg-gray-50 cursor-pointer">
+                                <div className="w-12 h-16 bg-gray-200 rounded flex-shrink-0 overflow-hidden">
+                                    {book.cover ? (
+                                        <img src={book.cover} alt={book.title} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                                            📚
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-grow min-w-0">
+                                    <h4 className="font-semibold text-sm text-gray-900 truncate">{book.title}</h4>
+                                    <p className="text-xs text-gray-600 truncate">{book.author}</p>
+                                    {book.published && (
+                                        <p className="text-xs text-gray-500">{book.published}</p>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => handleAddBook(book)}
+                                    className="flex-shrink-0 p-2 text-accent hover:bg-accent-light rounded-md transition-colors"
+                                    title="Lägg till i biblioteket"
+                                >
+                                    <Plus size={20} />
+                                </button>
+                            </div>
+
+                            {/* Expandable description on hover */}
+                            {book.synopsis && (
+                                <div className="max-h-0 overflow-hidden group-hover:max-h-48 transition-all duration-300 ease-in-out">
+                                    <div className="px-3 pb-3 pt-0">
+                                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                            <p className="text-sm text-gray-700 leading-relaxed line-clamp-4">
+                                                {book.synopsis}
+                                            </p>
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                            <div className="flex-grow min-w-0">
-                                <h4 className="font-semibold text-sm text-gray-900 truncate">{book.title}</h4>
-                                <p className="text-xs text-gray-600 truncate">{book.author}</p>
-                                {book.published && (
-                                    <p className="text-xs text-gray-500">{book.published}</p>
-                                )}
-                            </div>
-                            <button
-                                onClick={() => handleAddBook(book)}
-                                className="flex-shrink-0 p-2 text-accent hover:bg-accent-light rounded-md transition-colors"
-                                title="Lägg till i biblioteket"
-                            >
-                                <Plus size={20} />
-                            </button>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

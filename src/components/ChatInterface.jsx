@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, User, Sparkles } from 'lucide-react';
 import { sendMessageToBibbi } from '../services/gemini';
+import { getUserProfile } from '../services/storage';
 
-const ChatInterface = () => {
+const ChatInterface = ({ modes }) => {
     const [messages, setMessages] = useState([
         {
             id: 1,
@@ -32,7 +33,10 @@ const ChatInterface = () => {
         setIsTyping(true);
 
         try {
-            const responseText = await sendMessageToBibbi(input, messages);
+            // Get latest profile data
+            const profile = getUserProfile();
+
+            const responseText = await sendMessageToBibbi(input, messages, modes, profile);
             const bibbiMessage = { id: Date.now() + 1, sender: 'bibbi', text: responseText };
             setMessages(prev => [...prev, bibbiMessage]);
         } catch (error) {
@@ -64,8 +68,8 @@ const ChatInterface = () => {
                     >
                         <div
                             className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${msg.sender === 'user'
-                                    ? 'bg-accent text-white rounded-br-none'
-                                    : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
+                                ? 'bg-accent text-white rounded-br-none'
+                                : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
                                 }`}
                         >
                             <p className="text-sm leading-relaxed">{msg.text}</p>
