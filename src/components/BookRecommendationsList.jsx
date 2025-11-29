@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sparkles, Plus, Loader2 } from 'lucide-react';
-import { getBookRecommendations, enrichBookData } from '../services/gemini';
+import { getBookRecommendations } from '../services/gemini';
 import { searchBooks } from '../services/googleBooks';
 import { addToLibrary, getUserProfile } from '../services/storage';
 
@@ -17,29 +17,41 @@ const BookRecommendationsList = () => {
         setEnrichedBooks([]);
 
         try {
-            // Get recommendations from Gemini
+            // Get recommendations from Gemini (now includes metadata!)
             const profile = getUserProfile();
             const recs = await getBookRecommendations(null, profile);
             setRecommendations(recs);
 
-            // Enrich with Google Books data AND AI metadata
+            // Fetch Google Books data for covers etc.
             const enriched = await Promise.all(
                 recs.map(async (rec) => {
                     try {
-                        const [googleResults, aiMetadata] = await Promise.all([
-                            searchBooks(`${rec.title} ${rec.author}`),
-                            enrichBookData(rec.title, rec.author)
-                        ]);
-
+                        const googleResults = await searchBooks(`${rec.title} ${rec.author}`);
                         const bookData = googleResults[0]; // Take first result
+
                         return {
                             ...rec,
                             googleBook: bookData || null,
-                            aiMetadata: aiMetadata || null
+                            // Metadata is now directly on 'rec' from Gemini
+                            aiMetadata: {
+                                vibe: rec.vibe,
+                                tempo: rec.tempo,
+                                themes: rec.themes,
+                                genre_specifics: rec.genre_specifics
+                            }
                         };
                     } catch (err) {
-                        console.error(`Failed to fetch data for ${rec.title}:`, err);
-                        return { ...rec, googleBook: null, aiMetadata: null };
+                        console.error(`Failed to fetch Google Books data for ${rec.title}:`, err);
+                        return {
+                            ...rec,
+                            googleBook: null,
+                            aiMetadata: {
+                                vibe: rec.vibe,
+                                tempo: rec.tempo,
+                                themes: rec.themes,
+                                genre_specifics: rec.genre_specifics
+                            }
+                        };
                     }
                 })
             );

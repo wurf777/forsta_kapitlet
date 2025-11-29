@@ -168,7 +168,11 @@ Svara ENDAST med en JSON-array i följande format (ingen annan text):
   {
     "title": "Boktitel",
     "author": "Författarnamn",
-    "reason": "Kort förklaring (1-2 meningar) varför denna bok passar användarens smak"
+    "reason": "Kort förklaring (1-2 meningar) varför denna bok passar användarens smak",
+    "vibe": "En kort sträng som beskriver känslan (t.ex. Mysig, Mörk & Tung, Spännande)",
+    "tempo": 3, // Ett heltal 1-5 (1=Långsamt, 5=Actionfyllt)
+    "themes": ["Tema 1", "Tema 2", "Tema 3"], // 3-5 nyckelteman på svenska
+    "genre_specifics": "Specifik genre (t.ex. Psykologisk thriller)"
   }
 ]`;
 
@@ -188,45 +192,5 @@ Svara ENDAST med en JSON-array i följande format (ingen annan text):
     } catch (error) {
         console.error('Error getting book recommendations:', error);
         throw error;
-    }
-};
-
-/**
- * Enrich book data with AI-generated metadata (vibe, tempo, themes)
- * @param {string} title - Book title
- * @param {string} author - Book author
- * @returns {Promise<Object>} - Enriched metadata
- */
-export const enrichBookData = async (title, author) => {
-    if (!genAI) return null;
-
-    try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-
-        const prompt = `Analysera boken "${title}" av ${author}.
-Ge mig följande metadata i JSON-format:
-- "vibe": En kort sträng som beskriver känslan (t.ex. "Mysig", "Mörk & Tung", "Spännande", "Humoristisk")
-- "tempo": Ett heltal 1-5 (1=Långsamt, 5=Actionfyllt)
-- "themes": En array med 3-5 nyckelteman (på svenska)
-- "genre_specifics": En mer specifik genrebestämning (t.ex. "Psykologisk thriller" istället för bara "Thriller")
-
-Svara ENDAST med JSON:
-{
-  "vibe": "...",
-  "tempo": 3,
-  "themes": ["...", "..."],
-  "genre_specifics": "..."
-}`;
-
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
-
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) return null;
-
-        return JSON.parse(jsonMatch[0]);
-    } catch (error) {
-        console.error("Error enriching book data:", error);
-        return null;
     }
 };
