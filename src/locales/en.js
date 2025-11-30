@@ -48,6 +48,13 @@ const en = {
         wantToRead: "Want to read",
         reading: "Reading",
         read: "Read",
+        findBook: "Find the book",
+        basedOnPreferences: "Based on your preferences",
+        allFormats: "all formats",
+        noPreferencesMessage: "Here are some places where you can find the book. Set your preferences in",
+        profile: "Profile",
+        forPersonalSuggestions: "for personalized suggestions!",
+        serviceDisclaimer: "💡 Tip: Links take you directly to search for the book. Audible is in English and primarily has English books.",
     },
     myBooks: {
         title: "My Books",
@@ -138,6 +145,11 @@ const en = {
     common: {
         loading: "Loading...",
         error: "An error occurred.",
+    },
+    formats: {
+        audiobook: "Audiobook",
+        ebook: "E-book",
+        paperback: "Paperback",
     }
 };
 

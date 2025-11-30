@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Star, ArrowLeft, MessageCircle, BookOpen, Calendar, User, Trash2 } from 'lucide-react';
-import { getBookById, updateBookStatus, removeFromLibrary } from '../services/storage';
+import { Star, ArrowLeft, MessageCircle, BookOpen, Calendar, User, Trash2, ExternalLink } from 'lucide-react';
+import { getBookById, updateBookStatus, removeFromLibrary, getUserProfile } from '../services/storage';
+import { getServiceLinks } from '../services/serviceLinks';
 import { useLanguage } from '../context/LanguageContext';
+import { useBibbi } from '../context/BibbiContext';
 
 const BookDetail = () => {
     const { t } = useLanguage();
@@ -14,6 +16,10 @@ const BookDetail = () => {
     const [editedProgress, setEditedProgress] = useState(0);
     const [editedRating, setEditedRating] = useState(0);
     const [editedNotes, setEditedNotes] = useState('');
+    const [profile, setProfile] = useState(null);
+    const [serviceLinks, setServiceLinks] = useState([]);
+
+    const { setBookContext, clearContext } = useBibbi();
 
     useEffect(() => {
         const foundBook = getBookById(id);
@@ -23,8 +29,23 @@ const BookDetail = () => {
             setEditedProgress(foundBook.progress || 0);
             setEditedRating(foundBook.rating || 0);
             setEditedNotes(foundBook.notes || '');
+
+            // Set Bibbi context
+            setBookContext(foundBook);
+
+            // Load user profile and generate service links
+            const userProfile = getUserProfile();
+            setProfile(userProfile);
+            const links = getServiceLinks(
+                foundBook,
+                userProfile.preferredServices,
+                userProfile.preferredFormats
+            );
+            setServiceLinks(links);
         }
-    }, [id]);
+
+        return () => clearContext();
+    }, [id, setBookContext, clearContext]);
 
     const handleSave = () => {
         updateBookStatus(id, {
@@ -120,6 +141,42 @@ const BookDetail = () => {
                                     {t('bookDetail.bibbiReason')}
                                 </h3>
                                 <p className="text-gray-700 italic">"{book.recommendationReason}"</p>
+                            </div>
+                        )}
+
+                        {/* Service Links */}
+                        {serviceLinks.length > 0 && (
+                            <div className="mb-8 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                                <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
+                                    <ExternalLink size={18} />
+                                    {t('bookDetail.findBook')}
+                                </h3>
+                                {profile && (profile.preferredFormats?.length > 0 || profile.preferredServices?.length > 0) ? (
+                                    <p className="text-sm text-blue-800 mb-3">
+                                        {t('bookDetail.basedOnPreferences')} ({profile.preferredFormats?.join(', ') || t('bookDetail.allFormats')}):
+                                    </p>
+                                ) : (
+                                    <p className="text-sm text-blue-800 mb-3">
+                                        {t('bookDetail.noPreferencesMessage')} <Link to="/profile" className="underline font-medium">{t('bookDetail.profile')}</Link> {t('bookDetail.forPersonalSuggestions')}
+                                    </p>
+                                )}
+                                <div className="flex flex-wrap gap-2">
+                                    {serviceLinks.map(link => (
+                                        <a
+                                            key={link.id}
+                                            href={link.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-blue-200 rounded-lg text-sm font-medium text-blue-900 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                                        >
+                                            <span>{link.name}</span>
+                                            <ExternalLink size={14} />
+                                        </a>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-blue-700 mt-3 italic">
+                                    {t('bookDetail.serviceDisclaimer')}
+                                </p>
                             </div>
                         )}
 

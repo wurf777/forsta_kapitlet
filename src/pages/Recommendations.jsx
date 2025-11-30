@@ -1,19 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ChatInterface from '../components/ChatInterface';
 import BookRecommendationsList from '../components/BookRecommendationsList';
 import ModeSelector from '../components/ModeSelector';
 import { Sparkles } from 'lucide-react';
 
 import { useLanguage } from '../context/LanguageContext';
+import { useBibbi } from '../context/BibbiContext';
 
 const Recommendations = () => {
     const { t } = useLanguage();
-    const [modes, setModes] = useState({
+    const { setModes, setIsDocked } = useBibbi();
+    const [localModes, setLocalModes] = useState({
         length: 3,
         mood: 3,
         tempo: 3,
         vibes: []
     });
+
+    // Dock the chat when on this page
+    useEffect(() => {
+        setIsDocked(true);
+        return () => setIsDocked(false);
+    }, [setIsDocked]);
+
+    // Sync modes to global context
+    useEffect(() => {
+        setModes(localModes);
+    }, [localModes, setModes]);
 
     return (
         <div className="space-y-8">
@@ -38,8 +51,8 @@ const Recommendations = () => {
                 {/* Right column - Chat Interface */}
                 <div className="lg:col-span-7">
                     <div className="lg:sticky lg:top-6">
-                        <ModeSelector modes={modes} onChange={setModes} />
-                        <ChatInterface modes={modes} />
+                        <ModeSelector modes={localModes} onChange={setLocalModes} />
+                        <ChatInterface />
                     </div>
                 </div>
             </div>

@@ -11,7 +11,7 @@ const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
  * @param {Array} history - Conversation history
  * @returns {Promise<string>} - Bibbi's response
  */
-export const sendMessageToBibbi = async (message, history, modes = null, profile = null) => {
+export const sendMessageToBibbi = async (message, history, modes = null, profile = null, context = null) => {
     if (!genAI) {
         return "Hoppsan! Jag behöver en API-nyckel för att fungera. Lägg till din Gemini API-nyckel i .env filen (VITE_GEMINI_API_KEY).";
     }
@@ -34,9 +34,11 @@ export const sendMessageToBibbi = async (message, history, modes = null, profile
             const favGenres = profile.favoriteGenres?.length > 0 ? `\n- Favoritgenrer: ${profile.favoriteGenres.join(', ')}` : "";
             const blockAuthors = profile.blocklist?.authors?.length > 0 ? `\n- BLOCKERA författare (visa ALDRIG): ${profile.blocklist.authors.join(', ')}` : "";
             const blockGenres = profile.blocklist?.genres?.length > 0 ? `\n- BLOCKERA genrer/ämnen (visa ALDRIG): ${profile.blocklist.genres.join(', ')}` : "";
+            const prefFormats = profile.preferredFormats?.length > 0 ? `\n- Föredragna format: ${profile.preferredFormats.join(', ')}` : "";
+            const prefServices = profile.preferredServices?.length > 0 ? `\n- Föredragna tjänster: ${profile.preferredServices.map(id => id.charAt(0).toUpperCase() + id.slice(1)).join(', ')}` : "";
 
-            if (favAuthors || favGenres || blockAuthors || blockGenres) {
-                profileContext = `\n\nANVÄNDARPROFIL:${favAuthors}${favGenres}${blockAuthors}${blockGenres}`;
+            if (favAuthors || favGenres || blockAuthors || blockGenres || prefFormats || prefServices) {
+                profileContext = `\n\nANVÄNDARPROFIL:${favAuthors}${favGenres}${blockAuthors}${blockGenres}${prefFormats}${prefServices}`;
             }
         }
 
@@ -53,6 +55,21 @@ export const sendMessageToBibbi = async (message, history, modes = null, profile
 - Längd: ${lengthMap[modes.length] || "Lagom"}
 - Stämning: ${moodMap[modes.mood] || "Neutralt"}
 - Tempo: ${tempoMap[modes.tempo] || "Normalt"}${vibes}`;
+        }
+
+        // Build specific context (e.g. current book)
+        let specificContext = "";
+        if (context && context.type === 'book' && context.data) {
+            const book = context.data;
+            specificContext = `\n\nAKTUELL KONTEXT (Användaren tittar på denna bok just nu):
+- Titel: ${book.title}
+- Författare: ${book.author}
+- Beskrivning: ${book.synopsis}
+- Användarens status: ${book.status}
+- Användarens betyg: ${book.rating || 'Ej betygsatt'}
+- Användarens anteckningar: ${book.notes || 'Inga anteckningar'}
+
+Användaren ställer frågor om DENNA bok om inget annat anges.`;
         }
 
         // Build conversation history
@@ -74,13 +91,14 @@ PERSONLIGHET:
 RIKTLINJER:
 - Basera rekommendationer på användarens boklista, profil och aktuella läsläge
 - VIKTIGT: Respektera ALLTID användarens blocklista. Föreslå ALDRIG författare eller genrer som är blockerade.
+- Om användaren frågar var de kan hitta/läsa/lyssna på böcker, använd deras föredragna format och tjänster
 - Förklara VARFÖR en bok skulle passa användaren (t.ex. "Eftersom du gillar X...")
 - Var konkret med titlar och författare
 - Håll svaren lagom långa (2-4 meningar vanligtvis)
 - Undvik att lista för många böcker på en gång (max 2-3 per svar)
 - Var uppmuntrande och positiv
 
-${bookContext}${profileContext}${modesContext}`;
+${bookContext}${profileContext}${modesContext}${specificContext}`;
 
         const chat = model.startChat({
             history: [
@@ -143,9 +161,11 @@ export const getBookRecommendations = async (userBooks = null, profile = null) =
             const favGenres = profile.favoriteGenres?.length > 0 ? `\n- Favoritgenrer: ${profile.favoriteGenres.join(', ')}` : "";
             const blockAuthors = profile.blocklist?.authors?.length > 0 ? `\n- BLOCKERA författare (visa ALDRIG): ${profile.blocklist.authors.join(', ')}` : "";
             const blockGenres = profile.blocklist?.genres?.length > 0 ? `\n- BLOCKERA genrer/ämnen (visa ALDRIG): ${profile.blocklist.genres.join(', ')}` : "";
+            const prefFormats = profile.preferredFormats?.length > 0 ? `\n- Föredragna format: ${profile.preferredFormats.join(', ')}` : "";
+            const prefServices = profile.preferredServices?.length > 0 ? `\n- Föredragna tjänster: ${profile.preferredServices.map(id => id.charAt(0).toUpperCase() + id.slice(1)).join(', ')}` : "";
 
-            if (favAuthors || favGenres || blockAuthors || blockGenres) {
-                profileContext = `\n\nANVÄNDARPROFIL:${favAuthors}${favGenres}${blockAuthors}${blockGenres}`;
+            if (favAuthors || favGenres || blockAuthors || blockGenres || prefFormats || prefServices) {
+                profileContext = `\n\nANVÄNDARPROFIL:${favAuthors}${favGenres}${blockAuthors}${blockGenres}${prefFormats}${prefServices}`;
             }
         }
 

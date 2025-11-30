@@ -88,7 +88,9 @@ const DEFAULT_PROFILE = {
     },
     modes: {
         // Default mode settings can go here later
-    }
+    },
+    preferredFormats: [], // e.g., ['Ljudbok', 'E-bok', 'Pappersbok']
+    preferredServices: [] // e.g., ['Storytel', 'BookBeat', 'Bibliotek']
 };
 
 export const getUserProfile = () => {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getUserProfile, updateUserProfile, exportData, importData, getUniqueAuthors, getUniqueGenres } from '../services/storage';
+import { AVAILABLE_SERVICES, AVAILABLE_FORMATS } from '../services/serviceLinks';
 import { useLanguage } from '../context/LanguageContext';
 
 const Profile = () => {
@@ -56,6 +57,22 @@ const Profile = () => {
         } else {
             handleUpdate({ [listName]: profile[listName].filter(i => i !== item) });
         }
+    };
+
+    const toggleFormat = (format) => {
+        const current = profile.preferredFormats || [];
+        const updated = current.includes(format)
+            ? current.filter(f => f !== format)
+            : [...current, format];
+        handleUpdate({ preferredFormats: updated });
+    };
+
+    const toggleService = (serviceId) => {
+        const current = profile.preferredServices || [];
+        const updated = current.includes(serviceId)
+            ? current.filter(s => s !== serviceId)
+            : [...current, serviceId];
+        handleUpdate({ preferredServices: updated });
     };
 
     const handleExport = () => {
@@ -146,6 +163,56 @@ const Profile = () => {
                     </Section>
                 </div>
             </div>
+
+            {/* Reading Habits & Services Section */}
+            <Section title={`📚 Läsvanor & Tjänster`}>
+                <p className="text-stone-600 mb-4 text-sm">
+                    Välj hur du föredrar att läsa/lyssna och vilka tjänster du använder. Detta hjälper Bibbi att ge bättre förslag och visar dig var du kan hitta böcker.
+                </p>
+
+                <div className="mb-6">
+                    <h3 className="font-medium text-stone-700 mb-3">Format</h3>
+                    <div className="flex flex-wrap gap-3">
+                        {AVAILABLE_FORMATS.map(format => (
+                            <label
+                                key={format}
+                                className="flex items-center gap-2 px-4 py-2 border border-stone-200 rounded-lg cursor-pointer hover:bg-stone-50 transition-colors"
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={profile.preferredFormats?.includes(format) || false}
+                                    onChange={() => toggleFormat(format)}
+                                    className="rounded text-stone-800 focus:ring-stone-400"
+                                />
+                                <span className="text-sm text-stone-700">{format}</span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+
+                <div>
+                    <h3 className="font-medium text-stone-700 mb-3">Tjänster</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {AVAILABLE_SERVICES.map(service => (
+                            <label
+                                key={service.id}
+                                className="flex items-start gap-2 px-4 py-3 border border-stone-200 rounded-lg cursor-pointer hover:bg-stone-50 transition-colors"
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={profile.preferredServices?.includes(service.id) || false}
+                                    onChange={() => toggleService(service.id)}
+                                    className="mt-0.5 rounded text-stone-800 focus:ring-stone-400"
+                                />
+                                <div className="flex-1">
+                                    <div className="text-sm font-medium text-stone-900">{service.name}</div>
+                                    <div className="text-xs text-stone-500">{service.types.join(', ')}</div>
+                                </div>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            </Section>
 
             {/* Data Management Section */}
             <Section title={`💾 ${t('profile.dataManagement')}`}>

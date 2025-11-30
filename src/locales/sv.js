@@ -48,6 +48,13 @@ const sv = {
         wantToRead: "Vill läsa",
         reading: "Läser",
         read: "Läst",
+        findBook: "Hitta boken",
+        basedOnPreferences: "Baserat på dina inställningar",
+        allFormats: "alla format",
+        noPreferencesMessage: "Här är några ställen där du kan hitta boken. Ställ in dina preferenser i",
+        profile: "Profilen",
+        forPersonalSuggestions: "för personliga förslag!",
+        serviceDisclaimer: "💡 Tips: Länkarna tar dig direkt till sökning efter boken. Audible är på engelska och har framför allt engelska böcker.",
     },
     myBooks: {
         title: "Mina Böcker",
@@ -138,6 +145,11 @@ const sv = {
     common: {
         loading: "Laddar...",
         error: "Ett fel uppstod.",
+    },
+    formats: {
+        audiobook: "Ljudbok",
+        ebook: "E-bok",
+        paperback: "Pappersbok",
     }
 };
 

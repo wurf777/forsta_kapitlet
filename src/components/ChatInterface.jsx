@@ -3,19 +3,27 @@ import { Send, User, Sparkles, Check, X } from 'lucide-react';
 import { sendMessageToBibbi, analyzeChatForPreferences } from '../services/gemini';
 import { getUserProfile, updateUserProfile } from '../services/storage';
 import { useLanguage } from '../context/LanguageContext';
+import { useBibbi } from '../context/BibbiContext';
 
-const ChatInterface = ({ modes }) => {
+const ChatInterface = ({ className, onClose }) => {
     const { t } = useLanguage();
-    const [messages, setMessages] = useState([
-        {
-            id: 1,
-            sender: 'bibbi',
-            text: t('chat.welcome')
-        }
-    ]);
+    const { messages, setMessages, modes, context } = useBibbi();
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef(null);
+
+    // Initialize welcome message if empty
+    useEffect(() => {
+        if (messages.length === 0) {
+            setMessages([
+                {
+                    id: 1,
+                    sender: 'bibbi',
+                    text: t('chat.welcome')
+                }
+            ]);
+        }
+    }, [messages.length, setMessages, t]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -23,7 +31,7 @@ const ChatInterface = ({ modes }) => {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [messages, isTyping]);
 
     const handleAcceptSuggestion = (suggestion, messageId) => {
         const current = getUserProfile();
@@ -60,13 +68,21 @@ const ChatInterface = ({ modes }) => {
             // Get latest profile data
             const profile = getUserProfile();
 
-            const responseText = await sendMessageToBibbi(input, messages, modes, profile);
+            // Prepare context for Bibbi
+            // If we have a specific book context, we should probably include it in the message or as a separate argument
+            // For now, let's append it to the message if it's a book context and it's the first message about it?
+            // Or better, let's update sendMessageToBibbi to accept 'context' object.
+
+            // For now, let's pass the context object to sendMessageToBibbi
+            // We need to update sendMessageToBibbi signature or handle it here.
+            // Let's assume we will update sendMessageToBibbi to take 'context' as an argument.
+
+            const responseText = await sendMessageToBibbi(input, messages, modes, profile, context);
             const bibbiMessage = { id: Date.now() + 1, sender: 'bibbi', text: responseText };
 
             setMessages(prev => [...prev, bibbiMessage]);
 
             // Analyze for preferences in background
-            // We construct the history manually to ensure we have the latest messages including the ones just added
             const historyForAnalysis = [...messages, userMessage, bibbiMessage];
 
             analyzeChatForPreferences(historyForAnalysis).then(suggestion => {
@@ -88,16 +104,25 @@ const ChatInterface = ({ modes }) => {
     };
 
     return (
-        <div className="flex flex-col h-[600px] bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div className={`flex flex-col bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden ${className || 'h-[600px]'}`}>
             {/* Header */}
-            <div className="bg-accent/10 p-4 border-b border-accent/20 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white shadow-sm">
-                    <Sparkles size={20} />
+            <div className="bg-accent/10 p-4 border-b border-accent/20 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white shadow-sm">
+                        <Sparkles size={20} />
+                    </div>
+                    <div>
+                        <h3 className="font-heading font-bold text-gray-900">{t('chat.bibbiName')}</h3>
+                        <p className="text-xs text-accent font-medium">
+                            {context?.type === 'book' ? `Pratar om: ${context.data.title}` : t('chat.bibbiRole')}
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <h3 className="font-heading font-bold text-gray-900">{t('chat.bibbiName')}</h3>
-                    <p className="text-xs text-accent font-medium">{t('chat.bibbiRole')}</p>
-                </div>
+                {onClose && (
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-black/5 transition-colors">
+                        <X size={20} />
+                    </button>
+                )}
             </div>
 
             {/* Messages */}
@@ -106,7 +131,7 @@ const ChatInterface = ({ modes }) => {
                     if (msg.sender === 'system' && msg.type === 'suggestion') {
                         return (
                             <div key={msg.id} className="flex justify-center my-2">
-                                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 max-w-[80%] shadow-sm">
+                                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 max-w-[90%] shadow-sm">
                                     <div className="flex items-start gap-3">
                                         <div className="bg-blue-100 p-2 rounded-full text-blue-600">
                                             <Sparkles size={16} />
@@ -152,13 +177,13 @@ const ChatInterface = ({ modes }) => {
                                             </div>
 
                                             {!msg.accepted ? (
-                                                <div className="flex gap-2">
+                                                <div className="flex gap-2 flex-wrap">
                                                     <button
                                                         onClick={() => handleAcceptSuggestion(msg.data, msg.id)}
                                                         className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-colors"
                                                     >
                                                         <Check size={14} />
-                                                        Ja, spara ändringar
+                                                        Ja, spara
                                                     </button>
                                                     <button
                                                         onClick={() => setMessages(prev => prev.filter(m => m.id !== msg.id))}
@@ -187,12 +212,12 @@ const ChatInterface = ({ modes }) => {
                             className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
                             <div
-                                className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${msg.sender === 'user'
+                                className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${msg.sender === 'user'
                                     ? 'bg-accent text-white rounded-br-none'
                                     : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
                                     }`}
                             >
-                                <p className="text-sm leading-relaxed">{msg.text}</p>
+                                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                             </div>
                         </div>
                     );
@@ -212,21 +237,21 @@ const ChatInterface = ({ modes }) => {
             </div>
 
             {/* Input */}
-            <form onSubmit={handleSend} className="p-4 bg-white border-t border-gray-100">
+            <form onSubmit={handleSend} className="p-3 bg-white border-t border-gray-100">
                 <div className="flex gap-2">
                     <input
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder={t('chat.placeholder')}
-                        className="flex-grow px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
+                        className="flex-grow px-4 py-2 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all text-sm"
                     />
                     <button
                         type="submit"
                         disabled={!input.trim() || isTyping}
-                        className="btn btn-primary px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent/90 transition-colors shadow-sm"
                     >
-                        <Send size={20} />
+                        <Send size={18} />
                     </button>
                 </div>
             </form>
