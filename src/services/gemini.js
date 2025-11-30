@@ -194,3 +194,62 @@ Svara ENDAST med en JSON-array i följande format (ingen annan text):
         throw error;
     }
 };
+
+/**
+ * Analyze chat history for user preferences
+ * @param {Array} history - Chat history
+ * @returns {Promise<Object|null>} - Suggested profile updates or null
+ */
+export const analyzeChatForPreferences = async (history) => {
+    if (!genAI || history.length < 2) return null;
+
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+
+        // Only look at the last few messages to save context and focus on recent topics
+        const recentMessages = history.slice(-4).map(msg =>
+            `${msg.sender === 'user' ? 'Användare' : 'Bibbi'}: ${msg.text}`
+        ).join('\n');
+
+        const prompt = `Analysera följande konversation mellan en användare och en bok-assistent (Bibbi).
+Leta efter STARKA och TYDLIGA signaler på att användaren gillar eller ogillar specifika författare eller genrer.
+Ignorera vaga uttalanden. Fokusera på när användaren uttryckligen säger "Jag älskar X", "X är min favorit", "Jag hatar Y", "Visa aldrig Z".
+
+KONVERSATION:
+${recentMessages}
+
+Om du hittar nya preferenser, returnera en JSON med följande struktur (annars returnera null):
+{
+  "favoriteAuthors": ["Namn 1"], // Lägg till om användaren gillar
+  "favoriteGenres": ["Genre 1"], // Lägg till om användaren gillar
+  "blocklist": {
+    "authors": ["Namn 2"], // Lägg till om användaren vill blockera/ogillar starkt
+    "genres": ["Genre 2"] // Lägg till om användaren vill blockera/ogillar starkt
+  },
+  "reason": "Kort förklaring på svenska varför detta föreslås. VIKTIGT: Tilltala användaren med 'du' (t.ex. 'Eftersom du verkar gilla...')."
+}
+
+Svara ENDAST med JSON.`;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) return null;
+
+        const suggestions = JSON.parse(jsonMatch[0]);
+
+        // Filter out empty suggestions
+        const hasUpdates =
+            suggestions.favoriteAuthors?.length > 0 ||
+            suggestions.favoriteGenres?.length > 0 ||
+            suggestions.blocklist?.authors?.length > 0 ||
+            suggestions.blocklist?.genres?.length > 0;
+
+        return hasUpdates ? suggestions : null;
+
+    } catch (error) {
+        console.error('Error analyzing preferences:', error);
+        return null;
+    }
+};
