@@ -73,10 +73,12 @@ Användaren ställer frågor om DENNA bok om inget annat anges.`;
         }
 
         // Build conversation history
-        const chatHistory = history.map(msg => ({
-            role: msg.sender === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.text }]
-        }));
+        const chatHistory = history
+            .filter(msg => msg.text && msg.sender !== 'system') // Filter out system messages and empty text
+            .map(msg => ({
+                role: msg.sender === 'user' ? 'user' : 'model',
+                parts: [{ text: msg.text }]
+            }));
 
         // System prompt for Bibbi's personality
         const systemPrompt = `Du är Bibbi, en entusiastisk och kunnig bokexpert som älskar att hjälpa människor hitta sin nästa favoritbok.
@@ -218,35 +220,63 @@ Svara ENDAST med en JSON-array i följande format (ingen annan text):
 /**
  * Analyze chat history for user preferences
  * @param {Array} history - Chat history
+ * @param {Object} profile - User's current profile (optional)
  * @returns {Promise<Object|null>} - Suggested profile updates or null
  */
-export const analyzeChatForPreferences = async (history) => {
+export const analyzeChatForPreferences = async (history, profile = null) => {
     if (!genAI || history.length < 2) return null;
 
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
         // Only look at the last few messages to save context and focus on recent topics
-        const recentMessages = history.slice(-4).map(msg =>
-            `${msg.sender === 'user' ? 'Användare' : 'Bibbi'}: ${msg.text}`
-        ).join('\n');
+        const recentMessages = history
+            .filter(msg => msg.text && msg.sender !== 'system') // Filter out system messages
+            .slice(-4)
+            .map(msg =>
+                `${msg.sender === 'user' ? 'Användare' : 'Bibbi'}: ${msg.text}`
+            ).join('\n');
+
+        let profileContext = "";
+        if (profile) {
+            const favAuthors = profile.favoriteAuthors?.length > 0 ? `\n- Nuvarande favoritförfattare: ${profile.favoriteAuthors.join(', ')}` : "";
+            const favGenres = profile.favoriteGenres?.length > 0 ? `\n- Nuvarande favoritgenrer: ${profile.favoriteGenres.join(', ')}` : "";
+            const blockAuthors = profile.blocklist?.authors?.length > 0 ? `\n- Nuvarande blockerade författare: ${profile.blocklist.authors.join(', ')}` : "";
+            const blockGenres = profile.blocklist?.genres?.length > 0 ? `\n- Nuvarande blockerade genrer: ${profile.blocklist.genres.join(', ')}` : "";
+            profileContext = `\n\nANVÄNDARENS PROFIL:${favAuthors}${favGenres}${blockAuthors}${blockGenres}`;
+        }
 
         const prompt = `Analysera följande konversation mellan en användare och en bok-assistent (Bibbi).
 Leta efter STARKA och TYDLIGA signaler på att användaren gillar eller ogillar specifika författare eller genrer.
 Ignorera vaga uttalanden. Fokusera på när användaren uttryckligen säger "Jag älskar X", "X är min favorit", "Jag hatar Y", "Visa aldrig Z".
 
 KONVERSATION:
-${recentMessages}
+${recentMessages}${profileContext}
 
-Om du hittar nya preferenser, returnera en JSON med följande struktur (annars returnera null):
+INSTRUKTIONER:
+1. Om användaren gillar något nytt (som INTE redan är favorit), föreslå att lägga till i favoriter.
+2. Om användaren gillar något som ligger i blocklistan, föreslå att TA BORT det från blocklistan OCH lägga till i favoriter.
+3. Om användaren ogillar något som REDAN är en favorit (se profil), föreslå att TA BORT det från favoriter.
+4. Om användaren ogillar något starkt (som INTE redan är blockerat), föreslå att blockera det.
+5. Om användaren ogillar en favorit, kan du föreslå BÅDE att ta bort från favoriter OCH att blockera (om avskyn är stark).
+
+Returnera en JSON med följande struktur (annars returnera null):
 {
-  "favoriteAuthors": ["Namn 1"], // Lägg till om användaren gillar
-  "favoriteGenres": ["Genre 1"], // Lägg till om användaren gillar
-  "blocklist": {
-    "authors": ["Namn 2"], // Lägg till om användaren vill blockera/ogillar starkt
-    "genres": ["Genre 2"] // Lägg till om användaren vill blockera/ogillar starkt
+  "favoriteAuthors": ["Namn 1"], // Lägg till i favoriter
+  "favoriteGenres": ["Genre 1"], // Lägg till i favoriter
+  "removeFromFavorites": {
+      "authors": ["Namn 3"], // TA BORT från favoriter
+      "genres": ["Genre 3"] // TA BORT från favoriter
   },
-  "reason": "Kort förklaring på svenska varför detta föreslås. VIKTIGT: Tilltala användaren med 'du' (t.ex. 'Eftersom du verkar gilla...')."
+  "blocklist": {
+    "authors": ["Namn 2"], // Blockera
+    "genres": ["Genre 2"] // Blockera
+  },
+  "removeFromBlocklist": {
+      "authors": ["Namn 4"], // TA BORT från blocklistan
+      "genres": ["Genre 4"] // TA BORT från blocklistan
+  },
+  "reason": "Kort förklaring på svenska varför detta föreslås. VIKTIGT: Tilltala användaren med 'du' (t.ex. 'Eftersom du inte längre verkar gilla...')."
 }
 
 Svara ENDAST med JSON.`;
@@ -259,12 +289,32 @@ Svara ENDAST med JSON.`;
 
         const suggestions = JSON.parse(jsonMatch[0]);
 
+        // Filter out suggestions that are already in the profile to avoid redundancy
+        if (profile) {
+            if (suggestions.favoriteAuthors) {
+                suggestions.favoriteAuthors = suggestions.favoriteAuthors.filter(a => !profile.favoriteAuthors?.includes(a));
+            }
+            if (suggestions.favoriteGenres) {
+                suggestions.favoriteGenres = suggestions.favoriteGenres.filter(g => !profile.favoriteGenres?.includes(g));
+            }
+            if (suggestions.blocklist?.authors) {
+                suggestions.blocklist.authors = suggestions.blocklist.authors.filter(a => !profile.blocklist?.authors?.includes(a));
+            }
+            if (suggestions.blocklist?.genres) {
+                suggestions.blocklist.genres = suggestions.blocklist.genres.filter(g => !profile.blocklist?.genres?.includes(g));
+            }
+        }
+
         // Filter out empty suggestions
         const hasUpdates =
             suggestions.favoriteAuthors?.length > 0 ||
             suggestions.favoriteGenres?.length > 0 ||
+            suggestions.removeFromFavorites?.authors?.length > 0 ||
+            suggestions.removeFromFavorites?.genres?.length > 0 ||
             suggestions.blocklist?.authors?.length > 0 ||
-            suggestions.blocklist?.genres?.length > 0;
+            suggestions.blocklist?.genres?.length > 0 ||
+            suggestions.removeFromBlocklist?.authors?.length > 0 ||
+            suggestions.removeFromBlocklist?.genres?.length > 0;
 
         return hasUpdates ? suggestions : null;
 

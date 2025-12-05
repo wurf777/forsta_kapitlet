@@ -19,7 +19,7 @@ const BookDetail = () => {
     const [profile, setProfile] = useState(null);
     const [serviceLinks, setServiceLinks] = useState([]);
 
-    const { setBookContext, clearContext } = useBibbi();
+    const { setBookContext, clearContext, openChat } = useBibbi();
 
     useEffect(() => {
         const foundBook = getBookById(id);
@@ -54,7 +54,9 @@ const BookDetail = () => {
             rating: editedRating,
             notes: editedNotes
         });
-        setBook({ ...book, status: editedStatus, progress: editedProgress, rating: editedRating, notes: editedNotes });
+        const updatedBook = { ...book, status: editedStatus, progress: editedProgress, rating: editedRating, notes: editedNotes };
+        setBook(updatedBook);
+        setBookContext(updatedBook); // Update Bibbi context with new data
         setIsEditing(false);
     };
 
@@ -252,10 +254,10 @@ const BookDetail = () => {
                                     <button onClick={() => setIsEditing(true)} className="btn btn-primary flex-1">
                                         {book.notes ? t('bookDetail.updateStatusAndNotes') : t('bookDetail.updateStatus')}
                                     </button>
-                                    <Link to="/recommendations" className="btn btn-secondary flex-1 flex items-center justify-center gap-2">
+                                    <button onClick={openChat} className="btn btn-secondary flex-1 flex items-center justify-center gap-2">
                                         <MessageCircle size={20} />
                                         {t('bookDetail.talkToBibbi')}
-                                    </Link>
+                                    </button>
                                 </div>
                                 <button
                                     onClick={handleDelete}

@@ -65,8 +65,10 @@ const BookRecommendationsList = () => {
     };
 
     const handleAddBook = (book) => {
+        let bookToAdd;
+
         if (book.googleBook) {
-            const bookToAdd = {
+            bookToAdd = {
                 ...book.googleBook,
                 // Merge AI metadata if available
                 categories: book.aiMetadata?.genre_specifics ? [book.aiMetadata.genre_specifics, ...book.googleBook.categories] : book.googleBook.categories,
@@ -75,13 +77,34 @@ const BookRecommendationsList = () => {
                 themes: book.aiMetadata?.themes,
                 recommendationReason: book.reason // Persist the reason why Bibbi recommended this
             };
+        } else {
+            // Fallback if Google Books data is missing
+            bookToAdd = {
+                id: `ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                title: book.title,
+                author: book.author,
+                cover: null,
+                rating: 0,
+                progress: 0,
+                status: 'Vill läsa',
+                pages: 0,
+                published: 'Okänt år',
+                synopsis: book.reason,
+                categories: book.aiMetadata?.genre_specifics ? [book.aiMetadata.genre_specifics] : [],
+                language: 'okänt',
+                isbn: null,
+                vibe: book.aiMetadata?.vibe,
+                tempo: book.aiMetadata?.tempo,
+                themes: book.aiMetadata?.themes,
+                recommendationReason: book.reason
+            };
+        }
 
-            const success = addToLibrary(bookToAdd);
-            if (success) {
-                alert(`"${book.title}" har lagts till i din boklista!`);
-            } else {
-                alert('Boken finns redan i din lista.');
-            }
+        const success = addToLibrary(bookToAdd);
+        if (success) {
+            alert(`"${book.title}" har lagts till i din boklista!`);
+        } else {
+            alert('Boken finns redan i din lista.');
         }
     };
 
@@ -200,7 +223,7 @@ const BookRecommendationsList = () => {
                                     {/* Add button */}
                                     <button
                                         onClick={() => handleAddBook(book)}
-                                        disabled={!book.googleBook}
+                                        disabled={false}
                                         className="btn btn-secondary px-3 py-2 rounded-lg flex-shrink-0 self-start disabled:opacity-30 disabled:cursor-not-allowed"
                                         title="Lägg till i min lista"
                                     >
