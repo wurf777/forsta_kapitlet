@@ -20,6 +20,18 @@ const en = {
         addBooks: "Add Books",
         progress: "complete",
         roman: "Novel",
+        stats: {
+            totalBooks: "Total books",
+            booksRead: "Books read",
+            avgRating: "Avg rating",
+            currentlyReading: "Reading now",
+        },
+        wantToReadTitle: "Want to Read",
+        noCurrentlyReading: "You're not reading any book right now",
+        noWantToRead: "No books in your reading queue",
+        bibbiTip: "Bibbi's Tip",
+        moreTips: "More tips",
+        recentActivity: "Recent Activity",
     },
     bookDetail: {
         backToLibrary: "Back to Library",
