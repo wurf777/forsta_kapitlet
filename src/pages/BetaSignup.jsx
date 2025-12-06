@@ -18,7 +18,7 @@ const BetaSignup = () => {
         setErrorMessage('');
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/beta-signup.php`, {
+            const response = await fetch(`${import.meta.env.VITE_SITE_URL || ''}/api/beta-signup-simple.php`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -33,11 +33,11 @@ const BetaSignup = () => {
                 setFormData({ name: '', email: '', message: '' });
             } else {
                 setStatus('error');
-                setErrorMessage(data.message || 'Något gick fel. Försök igen.');
+                setErrorMessage(data.error || data.message || `Fel: ${JSON.stringify(data)}`);
             }
         } catch (err) {
             setStatus('error');
-            setErrorMessage('Kunde inte skicka anmälan. Kontrollera din internetanslutning och försök igen.');
+            setErrorMessage(`Kunde inte skicka anmälan: ${err.message}`);
         }
     };
 
