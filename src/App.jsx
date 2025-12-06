@@ -8,6 +8,7 @@ import BookDetail from './pages/BookDetail';
 import Recommendations from './pages/Recommendations';
 import Profile from './pages/Profile';
 import BetaSignup from './pages/BetaSignup';
+import ScrollToTop from './components/ScrollToTop';
 
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -17,6 +18,7 @@ function App() {
   return (
     <LanguageProvider>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
