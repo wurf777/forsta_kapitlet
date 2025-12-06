@@ -64,6 +64,25 @@ const Profile = () => {
         const updated = current.includes(format)
             ? current.filter(f => f !== format)
             : [...current, format];
+
+        // If removing formats, also remove incompatible services
+        if (updated.length > 0) {
+            const currentServices = profile.preferredServices || [];
+            const compatibleServices = currentServices.filter(serviceId => {
+                const service = AVAILABLE_SERVICES.find(s => s.id === serviceId);
+                return service && service.types.some(type => updated.includes(type));
+            });
+
+            // Only update services if some were removed
+            if (compatibleServices.length !== currentServices.length) {
+                handleUpdate({
+                    preferredFormats: updated,
+                    preferredServices: compatibleServices
+                });
+                return;
+            }
+        }
+
         handleUpdate({ preferredFormats: updated });
     };
 
@@ -193,23 +212,37 @@ const Profile = () => {
                 <div>
                     <h3 className="font-medium text-stone-700 mb-3">Tjänster</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {AVAILABLE_SERVICES.map(service => (
-                            <label
-                                key={service.id}
-                                className="flex items-start gap-2 px-4 py-3 border border-stone-200 rounded-lg cursor-pointer hover:bg-stone-50 transition-colors"
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={profile.preferredServices?.includes(service.id) || false}
-                                    onChange={() => toggleService(service.id)}
-                                    className="mt-0.5 rounded text-stone-800 focus:ring-stone-400"
-                                />
-                                <div className="flex-1">
-                                    <div className="text-sm font-medium text-stone-900">{service.name}</div>
-                                    <div className="text-xs text-stone-500">{service.types.join(', ')}</div>
-                                </div>
-                            </label>
-                        ))}
+                        {AVAILABLE_SERVICES.map(service => {
+                            // Check if service supports any of the selected formats
+                            const selectedFormats = profile.preferredFormats || [];
+                            const isCompatible = selectedFormats.length === 0 ||
+                                service.types.some(type => selectedFormats.includes(type));
+
+                            return (
+                                <label
+                                    key={service.id}
+                                    className={`flex items-start gap-2 px-4 py-3 border rounded-lg transition-colors ${
+                                        isCompatible
+                                            ? 'border-stone-200 cursor-pointer hover:bg-stone-50'
+                                            : 'border-stone-100 bg-stone-50 opacity-50 cursor-not-allowed'
+                                    }`}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={profile.preferredServices?.includes(service.id) || false}
+                                        onChange={() => toggleService(service.id)}
+                                        disabled={!isCompatible}
+                                        className="mt-0.5 rounded text-stone-800 focus:ring-stone-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    />
+                                    <div className="flex-1">
+                                        <div className={`text-sm font-medium ${isCompatible ? 'text-stone-900' : 'text-stone-500'}`}>
+                                            {service.name}
+                                        </div>
+                                        <div className="text-xs text-stone-500">{service.types.join(', ')}</div>
+                                    </div>
+                                </label>
+                            );
+                        })}
                     </div>
                 </div>
             </Section>

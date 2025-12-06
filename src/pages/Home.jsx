@@ -307,7 +307,7 @@ const Home = () => {
                                         {dailyTip.title} <span className="font-normal text-gray-600">av {dailyTip.author}</span>
                                     </p>
                                     <p className="text-sm text-gray-600 mt-1">{dailyTip.reason}</p>
-                                    <Link to="/recommendations" className="text-accent text-sm hover:underline mt-2 inline-block">
+                                    <Link to="/recommendations#top" className="text-accent text-sm hover:underline mt-2 inline-block">
                                         {t('home.moreTips')} <ArrowRight size={12} className="inline" />
                                     </Link>
                                 </div>

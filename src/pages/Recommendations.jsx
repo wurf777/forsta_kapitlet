@@ -29,7 +29,7 @@ const Recommendations = () => {
     }, [localModes, setModes]);
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8" id="top">
             {/* Page header */}
             <div className="text-center space-y-4">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 text-accent mb-2">
