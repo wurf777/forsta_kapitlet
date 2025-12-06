@@ -33,12 +33,12 @@ const Home = () => {
                         {t('home.subtitle')}
                     </p>
                     <div className="flex justify-center gap-4 pt-8">
-                        <button
-                            onClick={() => document.querySelector('button[aria-label="Logga in"]')?.click() || document.querySelector('button:has(span:contains("Logga in"))')?.click()}
+                        <Link
+                            to="/beta-signup"
                             className="btn btn-primary text-lg px-8 py-3 shadow-lg hover:shadow-xl transition-all"
                         >
                             Kom igång
-                        </button>
+                        </Link>
                     </div>
                 </section>
 

@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
-    const [mode, setMode] = useState(initialMode);
+const AuthModal = ({ isOpen, onClose }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [name, setName] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
-    const { login, register } = useAuth();
+    const { login } = useAuth();
 
     if (!isOpen) return null;
 
@@ -21,23 +20,13 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         setLoading(true);
 
         try {
-            if (mode === 'login') {
-                await login(email, password);
-                onClose();
-            } else {
-                await register(email, password, name);
-                onClose();
-            }
+            await login(email, password);
+            onClose();
         } catch (err) {
             setError(err.message || 'Something went wrong');
         } finally {
             setLoading(false);
         }
-    };
-
-    const switchMode = () => {
-        setMode(mode === 'login' ? 'register' : 'login');
-        setError('');
     };
 
     return (
@@ -51,12 +40,10 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 </button>
 
                 <h2 className="text-3xl font-heading font-bold text-gray-900 mb-2">
-                    {mode === 'login' ? 'Välkommen tillbaka!' : 'Skapa konto'}
+                    Välkommen tillbaka!
                 </h2>
                 <p className="text-gray-600 mb-6">
-                    {mode === 'login'
-                        ? 'Logga in för att synka ditt bibliotek'
-                        : 'Registrera dig för att spara dina böcker'}
+                    Logga in för att synka ditt bibliotek
                 </p>
 
                 {error && (
@@ -67,24 +54,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {mode === 'register' && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Namn (valfritt)
-                            </label>
-                            <div className="relative">
-                                <User size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-accent"
-                                    placeholder="Ditt namn"
-                                />
-                            </div>
-                        </div>
-                    )}
-
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Email
@@ -132,26 +101,19 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                         disabled={loading}
                         className="w-full btn btn-primary py-3 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {loading ? 'Laddar...' : mode === 'login' ? 'Logga in' : 'Skapa konto'}
+                        {loading ? 'Laddar...' : 'Logga in'}
                     </button>
                 </form>
 
                 <div className="mt-6 text-center">
-                    <button
-                        onClick={switchMode}
+                    <Link
+                        to="/beta-signup"
+                        onClick={onClose}
                         className="text-accent hover:underline font-medium"
                     >
-                        {mode === 'login'
-                            ? 'Har du inget konto? Registrera dig'
-                            : 'Har du redan ett konto? Logga in'}
-                    </button>
+                        Vill du anmäla dig till beta? Klicka här
+                    </Link>
                 </div>
-
-                {mode === 'register' && (
-                    <p className="mt-4 text-xs text-gray-500 text-center">
-                        Genom att registrera dig godkänner du våra användarvillkor och integritetspolicy.
-                    </p>
-                )}
             </div>
         </div>
     );

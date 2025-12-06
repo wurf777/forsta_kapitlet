@@ -7,6 +7,7 @@ import MyBooks from './pages/MyBooks';
 import BookDetail from './pages/BookDetail';
 import Recommendations from './pages/Recommendations';
 import Profile from './pages/Profile';
+import BetaSignup from './pages/BetaSignup';
 
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -19,6 +20,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
+            <Route path="beta-signup" element={<BetaSignup />} />
             <Route path="books" element={
               <ProtectedRoute>
                 <MyBooks />
