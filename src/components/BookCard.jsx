@@ -3,7 +3,7 @@ import { Star, Book } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
-const BookCard = ({ id, title, author, cover, rating, progress, status, vibe, tempo }) => {
+const BookCard = ({ id, title, author, cover, rating, progress, status, vibe, tempo, source }) => {
     const { t } = useLanguage();
     return (
         <Link to={`/book/${id}`} className="card flex flex-col h-full group hover:no-underline">
@@ -23,8 +23,8 @@ const BookCard = ({ id, title, author, cover, rating, progress, status, vibe, te
             </div>
 
             <div className="flex-grow">
-                <h3 className="font-bold text-gray-900 leading-tight mb-1">{title}</h3>
-                <p className="text-sm text-gray-600 mb-2">{author}</p>
+                <h3 className="font-bold text-gray-900 leading-tight mb-1 line-clamp-2" title={title}>{title}</h3>
+                <p className="text-sm text-gray-600 mb-2 truncate">{author}</p>
 
                 {/* AI Metadata Badges */}
                 {(vibe || tempo) && (

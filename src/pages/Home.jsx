@@ -1,19 +1,75 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Book, Star } from 'lucide-react';
+import { ArrowRight, Book, Star, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getLibrary } from '../services/storage';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
     const { t } = useLanguage();
+    const { isAuthenticated } = useAuth();
     const [currentlyReading, setCurrentlyReading] = useState([]);
 
     useEffect(() => {
-        const library = getLibrary();
-        const reading = library.filter(book => book.status === 'Läser');
-        setCurrentlyReading(reading);
-    }, []);
+        if (isAuthenticated) {
+            const loadBooks = async () => {
+                const library = await getLibrary();
+                const reading = library.filter(book => book.status === 'Läser');
+                setCurrentlyReading(reading);
+            };
+            loadBooks();
+        }
+    }, [isAuthenticated]);
 
+    // Guest View (Landing Page)
+    if (!isAuthenticated) {
+        return (
+            <div className="space-y-16">
+                <section className="text-center py-20 space-y-8">
+                    <h1 className="text-6xl font-heading text-gray-900 leading-tight">
+                        {t('home.heroTitle')} <span className="text-accent">{t('home.heroTitleHighlight')}</span>
+                    </h1>
+                    <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+                        {t('home.subtitle')}
+                    </p>
+                    <div className="flex justify-center gap-4 pt-8">
+                        <button
+                            onClick={() => document.querySelector('button[aria-label="Logga in"]')?.click() || document.querySelector('button:has(span:contains("Logga in"))')?.click()}
+                            className="btn btn-primary text-lg px-8 py-3 shadow-lg hover:shadow-xl transition-all"
+                        >
+                            Kom igång
+                        </button>
+                    </div>
+                </section>
+
+                <section className="grid md:grid-cols-3 gap-8 text-center max-w-5xl mx-auto px-4">
+                    <div className="p-6 bg-white rounded-xl shadow-md">
+                        <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4 text-accent">
+                            <Book size={24} />
+                        </div>
+                        <h3 className="text-lg font-bold mb-2">Spara dina böcker</h3>
+                        <p className="text-gray-600">Samla allt du läser, vill läsa och har läst på ett ställe.</p>
+                    </div>
+                    <div className="p-6 bg-white rounded-xl shadow-md">
+                        <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4 text-accent">
+                            <Sparkles size={24} />
+                        </div>
+                        <h3 className="text-lg font-bold mb-2">AI-rekommendationer</h3>
+                        <p className="text-gray-600">Få personliga boktips från vår AI-bibliotekarie Bibbi.</p>
+                    </div>
+                    <div className="p-6 bg-white rounded-xl shadow-md">
+                        <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4 text-accent">
+                            <Star size={24} />
+                        </div>
+                        <h3 className="text-lg font-bold mb-2">Betygsätt & Recensera</h3>
+                        <p className="text-gray-600">Sätt betyg och skriv egna anteckningar om dina läsupplevelser.</p>
+                    </div>
+                </section>
+            </div>
+        );
+    }
+
+    // Authenticated User View (Dashboard)
     return (
         <div className="space-y-12">
             {/* Hero Section */}

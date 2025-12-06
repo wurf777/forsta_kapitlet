@@ -20,7 +20,7 @@ export const sendMessageToBibbi = async (message, history, modes = null, profile
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
         // Get user's book library for context
-        const userBooks = getLibrary();
+        const userBooks = await getLibrary();
         const bookContext = userBooks.length > 0
             ? `\n\nAnvändarens boklista (${userBooks.length} böcker):\n${userBooks.map(book =>
                 `- "${book.title}" av ${book.authors?.join(', ') || 'Okänd författare'} (Status: ${book.status || 'Vill läsa'})`
@@ -146,7 +146,7 @@ export const getBookRecommendations = async (userBooks = null, profile = null) =
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
         // Get user's book library
-        const library = userBooks || getLibrary();
+        const library = userBooks || await getLibrary();
 
         if (library.length === 0) {
             throw new Error("Du behöver lägga till några böcker i din lista först för att få personliga rekommendationer.");

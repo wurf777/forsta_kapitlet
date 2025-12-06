@@ -1,14 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { BookOpen, MessageCircle, Library, User, Sparkles } from 'lucide-react';
+import { BookOpen, MessageCircle, Library, User, Sparkles, LogOut, LogIn } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import LanguageSwitcher from './LanguageSwitcher';
 import ChatInterface from './ChatInterface';
+import AuthModal from './AuthModal';
 import { useBibbi } from '../context/BibbiContext';
 
 const Layout = () => {
   const { t } = useLanguage();
   const { isOpen, toggleChat, closeChat, openChat, isDocked } = useBibbi();
+  const { user, isAuthenticated, logout } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -34,9 +39,49 @@ const Layout = () => {
               <MessageCircle size={20} />
               <span>{t('nav.talkToBibbi')}</span>
             </button>
-            <Link to="/profile" className="p-2 text-gray-400 hover:text-accent rounded-full">
-              <User size={24} />
-            </Link>
+
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 p-2 text-gray-700 hover:text-accent rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <User size={24} />
+                  <span className="hidden md:inline font-medium">{user?.name || user?.email}</span>
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
+                    <Link
+                      to="/profile"
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      <User size={16} className="inline mr-2" />
+                      Profil
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setShowUserMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50"
+                    >
+                      <LogOut size={16} className="inline mr-2" />
+                      Logga ut
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="btn btn-primary flex items-center gap-2"
+              >
+                <LogIn size={20} />
+                <span>Logga in</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -51,8 +96,8 @@ const Layout = () => {
         </div>
       </footer>
 
-      {/* Global Bibbi Chat - Only show if not docked */}
-      {!isDocked && (
+      {/* Global Bibbi Chat - Only show if not docked and authenticated */}
+      {!isDocked && isAuthenticated && (
         <>
           <div className={`fixed bottom-6 right-6 z-50 flex flex-col items-end transition-all duration-300 ${isOpen ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0 pointer-events-none'}`}>
             <div className="mb-4 w-[400px] max-w-[calc(100vw-3rem)] shadow-2xl rounded-xl overflow-hidden">
@@ -75,6 +120,9 @@ const Layout = () => {
           )}
         </>
       )}
+
+      {/* Auth Modal */}
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 };

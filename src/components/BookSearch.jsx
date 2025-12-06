@@ -29,8 +29,8 @@ const BookSearch = ({ onBookAdded }) => {
         return () => clearTimeout(timeoutId);
     }, [query]);
 
-    const handleAddBook = (book) => {
-        const success = addToLibrary(book);
+    const handleAddBook = async (book) => {
+        const success = await addToLibrary(book);
         if (success) {
             setQuery('');
             setShowResults(false);
@@ -74,7 +74,19 @@ const BookSearch = ({ onBookAdded }) => {
                                     )}
                                 </div>
                                 <div className="flex-grow min-w-0">
-                                    <h4 className="font-semibold text-sm text-gray-900 truncate">{book.title}</h4>
+                                    <h4 className="font-semibold text-sm text-gray-900 truncate flex items-center gap-2">
+                                        {book.title}
+                                        {book.source === 'db' && (
+                                            <span className="bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded-full border border-green-200" title="Från lokal databas">
+                                                DB
+                                            </span>
+                                        )}
+                                        {book.source === 'google' && (
+                                            <span className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded-full border border-blue-200" title="Från Google Books">
+                                                Google
+                                            </span>
+                                        )}
+                                    </h4>
                                     <p className="text-xs text-gray-600 truncate">{book.author}</p>
                                     {book.published && (
                                         <p className="text-xs text-gray-500">{book.published}</p>

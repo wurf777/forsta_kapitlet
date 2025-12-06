@@ -10,8 +10,9 @@ const MyBooks = () => {
     const [filter, setFilter] = useState('Alla');
     const [books, setBooks] = useState([]);
 
-    const loadBooks = () => {
-        setBooks(getLibrary());
+    const loadBooks = async () => {
+        const library = await getLibrary();
+        setBooks(library);
     };
 
     useEffect(() => {

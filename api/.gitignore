@@ -1,0 +1,6 @@
+# Ignore PHP environment file
+.env
+
+# Ignore error logs
+error_log
+php_errors.log

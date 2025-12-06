@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: forsta_kapitlet_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: forsta_kapitlet_db
+      MYSQL_USER: forsta_user
+      MYSQL_PASSWORD: forsta_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - forsta_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PHP API Server
+  api:
+    image: php:8.2-apache
+    container_name: forsta_kapitlet_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    volumes:
+      - ./api:/var/www/html
+      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+    environment:
+      DB_HOST: db
+      DB_NAME: forsta_kapitlet_db
+      DB_USER: forsta_user
+      DB_PASS: forsta_password
+    networks:
+      - forsta_network
+    command: >
+      bash -c "
+      docker-php-ext-install pdo pdo_mysql &&
+      a2enmod rewrite &&
+      apache2-foreground
+      "
+
+  # phpMyAdmin (optional, för databashantering)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: forsta_kapitlet_phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: rootpassword
+    networks:
+      - forsta_network
+
+networks:
+  forsta_network:
+    driver: bridge
+
+volumes:
+  db_data:

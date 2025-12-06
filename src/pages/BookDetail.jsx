@@ -5,6 +5,7 @@ import { getBookById, updateBookStatus, removeFromLibrary, getUserProfile } from
 import { getServiceLinks } from '../services/serviceLinks';
 import { useLanguage } from '../context/LanguageContext';
 import { useBibbi } from '../context/BibbiContext';
+import { api } from '../services/api';
 
 const BookDetail = () => {
     const { t } = useLanguage();
@@ -18,31 +19,49 @@ const BookDetail = () => {
     const [editedNotes, setEditedNotes] = useState('');
     const [profile, setProfile] = useState(null);
     const [serviceLinks, setServiceLinks] = useState([]);
+    const [isFromAPI, setIsFromAPI] = useState(false);
 
     const { setBookContext, clearContext, openChat } = useBibbi();
 
     useEffect(() => {
-        const foundBook = getBookById(id);
-        if (foundBook) {
-            setBook(foundBook);
-            setEditedStatus(foundBook.status);
-            setEditedProgress(foundBook.progress || 0);
-            setEditedRating(foundBook.rating || 0);
-            setEditedNotes(foundBook.notes || '');
+        const loadBook = async () => {
+            // First try to get from localStorage
+            let foundBook = await getBookById(id);
 
-            // Set Bibbi context
-            setBookContext(foundBook);
+            // If not found and ID is numeric, try to fetch from API
+            if (!foundBook && !isNaN(id)) {
+                try {
+                    const apiBook = await api.books.get(id);
+                    foundBook = apiBook;
+                    setIsFromAPI(true);
+                } catch (error) {
+                    console.error('Failed to fetch book from API:', error);
+                }
+            }
 
-            // Load user profile and generate service links
-            const userProfile = getUserProfile();
-            setProfile(userProfile);
-            const links = getServiceLinks(
-                foundBook,
-                userProfile.preferredServices,
-                userProfile.preferredFormats
-            );
-            setServiceLinks(links);
-        }
+            if (foundBook) {
+                setBook(foundBook);
+                setEditedStatus(foundBook.status || 'Vill läsa');
+                setEditedProgress(foundBook.progress || 0);
+                setEditedRating(foundBook.rating || 0);
+                setEditedNotes(foundBook.notes || '');
+
+                // Set Bibbi context
+                setBookContext(foundBook);
+
+                // Load user profile and generate service links
+                const userProfile = getUserProfile();
+                setProfile(userProfile);
+                const links = getServiceLinks(
+                    foundBook,
+                    userProfile.preferredServices,
+                    userProfile.preferredFormats
+                );
+                setServiceLinks(links);
+            }
+        };
+
+        loadBook();
 
         return () => clearContext();
     }, [id, setBookContext, clearContext]);
@@ -182,8 +201,28 @@ const BookDetail = () => {
                             </div>
                         )}
 
-                        {isEditing ? (
+                        {isFromAPI ? (
+                            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                <p className="text-blue-900 mb-4">
+                                    {t('bookDetail.notInLibrary') || 'Denna bok finns inte i ditt bibliotek än.'}
+                                </p>
+                                <button
+                                    onClick={async () => {
+                                        const success = await addToLibrary(book);
+                                        if (success) {
+                                            navigate('/'); // Reload/redirect to show new state (or force refresh if easier)
+                                        } else {
+                                            alert(t('search.alreadyExists') || 'Boken finns redan i ditt bibliotek');
+                                        }
+                                    }}
+                                    className="btn btn-primary w-full"
+                                >
+                                    {t('bookDetail.addToLibrary') || 'Lägg till i mitt bibliotek'}
+                                </button>
+                            </div>
+                        ) : isEditing ? (
                             <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+                                {/* ... existing edit form ... */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">{t('bookDetail.status')}</label>
                                     <select
@@ -196,6 +235,7 @@ const BookDetail = () => {
                                         <option value="Läst">{t('bookDetail.read')}</option>
                                     </select>
                                 </div>
+                                {/* ... rest of form ... */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">{t('bookDetail.progress')} (%)</label>
                                     <input
@@ -260,7 +300,11 @@ const BookDetail = () => {
                                     </button>
                                 </div>
                                 <button
-                                    onClick={handleDelete}
+                                    onClick={() => {
+                                        if (confirm(t('bookDetail.confirmDelete', { title: book.title }))) {
+                                            handleDelete();
+                                        }
+                                    }}
                                     className="w-full btn bg-red-50 text-red-600 hover:bg-red-100 border-red-200 flex items-center justify-center gap-2"
                                 >
                                     <Trash2 size={20} />

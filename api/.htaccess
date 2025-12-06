@@ -1,0 +1,5 @@
+RewriteEngine On
+
+# Fix for Authorization header being stripped by Apache
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
