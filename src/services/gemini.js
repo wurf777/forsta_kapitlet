@@ -5,6 +5,9 @@ import { getLibrary } from './storage';
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
+// Storage key for daily tip
+const DAILY_TIP_KEY = 'forsta_kapitlet_daily_tip';
+
 /**
  * Send a message to Bibbi and get a response
  * @param {string} message - User's message
@@ -320,6 +323,92 @@ Svara ENDAST med JSON.`;
 
     } catch (error) {
         console.error('Error analyzing preferences:', error);
+        return null;
+    }
+};
+
+/**
+ * Get a daily book tip from Bibbi (cached for 24 hours)
+ * @param {Object} profile - User's profile (optional)
+ * @returns {Promise<Object|null>} - A single book recommendation or null
+ */
+export const getDailyTip = async (profile = null) => {
+    // Check for cached tip
+    const cached = localStorage.getItem(DAILY_TIP_KEY);
+    if (cached) {
+        try {
+            const { tip, date } = JSON.parse(cached);
+            const today = new Date().toDateString();
+            if (date === today && tip) {
+                return tip;
+            }
+        } catch {
+            // Invalid cache, continue to fetch new
+        }
+    }
+
+    if (!genAI) {
+        return null;
+    }
+
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const library = await getLibrary();
+
+        if (library.length === 0) {
+            return null;
+        }
+
+        const bookList = library.slice(0, 20).map(book =>
+            `- "${book.title}" av ${book.authors?.join(', ') || book.author || 'Okänd'} (${book.categories?.join(', ') || 'Ingen genre'})`
+        ).join('\n');
+
+        let profileContext = "";
+        if (profile) {
+            const favAuthors = profile.favoriteAuthors?.length > 0 ? `\nFavoritförfattare: ${profile.favoriteAuthors.join(', ')}` : "";
+            const favGenres = profile.favoriteGenres?.length > 0 ? `\nFavoritgenrer: ${profile.favoriteGenres.join(', ')}` : "";
+            const blockAuthors = profile.blocklist?.authors?.length > 0 ? `\nBLOCKERA författare: ${profile.blocklist.authors.join(', ')}` : "";
+            const blockGenres = profile.blocklist?.genres?.length > 0 ? `\nBLOCKERA genrer: ${profile.blocklist.genres.join(', ')}` : "";
+            profileContext = `${favAuthors}${favGenres}${blockAuthors}${blockGenres}`;
+        }
+
+        const prompt = `Du är Bibbi, en vänlig bokexpert. Ge ETT personligt boktips baserat på användarens bibliotek.
+
+BÖCKER I BIBLIOTEKET:
+${bookList}
+${profileContext}
+
+INSTRUKTIONER:
+- Ge EN bok som användaren INTE redan har
+- VIKTIGT: Föreslå ALDRIG författare eller genrer från blocklistan
+- Skriv en kort, personlig motivering (max 2 meningar)
+- Var varm och engagerande i tonen
+
+Svara ENDAST med JSON:
+{
+  "title": "Boktitel",
+  "author": "Författare",
+  "reason": "Kort motivering varför denna bok passar"
+}`;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) return null;
+
+        const tip = JSON.parse(jsonMatch[0]);
+
+        // Cache the tip with today's date
+        localStorage.setItem(DAILY_TIP_KEY, JSON.stringify({
+            tip,
+            date: new Date().toDateString()
+        }));
+
+        return tip;
+
+    } catch (error) {
+        console.error('Error getting daily tip:', error);
         return null;
     }
 };

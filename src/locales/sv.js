@@ -20,6 +20,18 @@ const sv = {
         addBooks: "Lägg till böcker",
         progress: "klart",
         roman: "Roman",
+        stats: {
+            totalBooks: "Böcker totalt",
+            booksRead: "Lästa böcker",
+            avgRating: "Snittbetyg",
+            currentlyReading: "Läser nu",
+        },
+        wantToReadTitle: "Vill läsa",
+        noCurrentlyReading: "Du läser ingen bok just nu",
+        noWantToRead: "Inga böcker i läskön",
+        bibbiTip: "Bibbis tips",
+        moreTips: "Fler tips",
+        recentActivity: "Senaste aktivitet",
     },
     bookDetail: {
         backToLibrary: "Tillbaka till biblioteket",
