@@ -24,3 +24,4 @@ dist-ssr
 *.sln
 *.sw?
 api/.env.one
+api/.env.one.co
