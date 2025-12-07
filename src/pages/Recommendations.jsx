@@ -29,20 +29,20 @@ const Recommendations = () => {
     }, [localModes, setModes]);
 
     return (
-        <div className="space-y-8" id="top">
+        <div className="space-y-6 md:space-y-8" id="top">
             {/* Page header */}
-            <div className="text-center space-y-4">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 text-accent mb-2">
-                    <Sparkles size={32} />
+            <div className="text-center space-y-3 md:space-y-4 px-4">
+                <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full bg-accent/10 text-accent mb-2">
+                    <Sparkles size={28} className="md:w-8 md:h-8" />
                 </div>
-                <h1 className="text-4xl font-heading text-gray-900">{t('recommendations.title')}</h1>
-                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-heading text-gray-900">{t('recommendations.title')}</h1>
+                <p className="text-base md:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto">
                     {t('recommendations.subtitle')}
                 </p>
             </div>
 
             {/* Two-column layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6">
                 {/* Left column - Book Recommendations */}
                 <div className="lg:col-span-5">
                     <BookRecommendationsList />
@@ -58,18 +58,18 @@ const Recommendations = () => {
             </div>
 
             {/* Feature cards */}
-            <div className="grid md:grid-cols-3 gap-6 mt-12">
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center">
-                    <h3 className="font-bold text-gray-900 mb-2">{t('recommendations.personal')}</h3>
-                    <p className="text-sm text-gray-600">{t('recommendations.personalDesc')}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 md:gap-6 mt-8 md:mt-12 px-4">
+                <div className="bg-white p-5 md:p-6 rounded-lg shadow-sm border border-gray-100 text-center">
+                    <h3 className="font-bold text-gray-900 mb-2 text-sm md:text-base">{t('recommendations.personal')}</h3>
+                    <p className="text-xs md:text-sm text-gray-600">{t('recommendations.personalDesc')}</p>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center">
-                    <h3 className="font-bold text-gray-900 mb-2">{t('recommendations.exploratory')}</h3>
-                    <p className="text-sm text-gray-600">{t('recommendations.exploratoryDesc')}</p>
+                <div className="bg-white p-5 md:p-6 rounded-lg shadow-sm border border-gray-100 text-center">
+                    <h3 className="font-bold text-gray-900 mb-2 text-sm md:text-base">{t('recommendations.exploratory')}</h3>
+                    <p className="text-xs md:text-sm text-gray-600">{t('recommendations.exploratoryDesc')}</p>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center">
-                    <h3 className="font-bold text-gray-900 mb-2">{t('recommendations.alwaysReady')}</h3>
-                    <p className="text-sm text-gray-600">{t('recommendations.alwaysReadyDesc')}</p>
+                <div className="bg-white p-5 md:p-6 rounded-lg shadow-sm border border-gray-100 text-center sm:col-span-2 md:col-span-1">
+                    <h3 className="font-bold text-gray-900 mb-2 text-sm md:text-base">{t('recommendations.alwaysReady')}</h3>
+                    <p className="text-xs md:text-sm text-gray-600">{t('recommendations.alwaysReadyDesc')}</p>
                 </div>
             </div>
         </div>

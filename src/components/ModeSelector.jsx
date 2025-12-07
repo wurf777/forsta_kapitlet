@@ -17,11 +17,11 @@ const ModeSelector = ({ modes, onChange }) => {
     };
 
     const Slider = ({ label, leftLabel, rightLabel, value, onChange }) => (
-        <div className="mb-6">
-            <div className="flex justify-between text-sm font-medium text-stone-700 mb-2">
-                <span>{leftLabel}</span>
-                <span className="text-stone-400 text-xs uppercase tracking-wider">{label}</span>
-                <span>{rightLabel}</span>
+        <div className="mb-5 md:mb-6">
+            <div className="flex justify-between text-xs md:text-sm font-medium text-stone-700 mb-2 gap-2">
+                <span className="text-left flex-1 truncate">{leftLabel}</span>
+                <span className="text-stone-400 text-[10px] md:text-xs uppercase tracking-wider flex-shrink-0">{label}</span>
+                <span className="text-right flex-1 truncate">{rightLabel}</span>
             </div>
             <input
                 type="range"
@@ -43,7 +43,7 @@ const ModeSelector = ({ modes, onChange }) => {
         return (
             <button
                 onClick={() => toggleChip(label)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${isSelected
+                className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-full text-xs md:text-sm font-medium transition-colors border ${isSelected
                     ? 'bg-stone-800 text-white border-stone-800'
                     : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400'
                     }`}
@@ -63,10 +63,10 @@ const ModeSelector = ({ modes, onChange }) => {
     };
 
     return (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-100 mb-8">
-            <h2 className="text-lg font-serif font-bold text-stone-800 mb-4">{t('modeSelector.title')}</h2>
+        <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-stone-100 mb-6 md:mb-8">
+            <h2 className="text-base md:text-lg font-serif font-bold text-stone-800 mb-3 md:mb-4">{t('modeSelector.title')}</h2>
 
-            <div className="space-y-2 mb-8">
+            <div className="space-y-2 mb-6 md:mb-8">
                 <Slider
                     label={t('modeSelector.length')}
                     leftLabel={t('modeSelector.shortFast')}
@@ -91,8 +91,8 @@ const ModeSelector = ({ modes, onChange }) => {
             </div>
 
             <div>
-                <h3 className="text-sm font-medium text-stone-700 mb-3">{t('modeSelector.vibe')}</h3>
-                <div className="flex flex-wrap gap-2">
+                <h3 className="text-xs md:text-sm font-medium text-stone-700 mb-3">{t('modeSelector.vibe')}</h3>
+                <div className="flex flex-wrap gap-1.5 md:gap-2">
                     {VIBES.map(vibe => (
                         <Chip key={vibe} label={getVibeLabel(vibe)} />
                     ))}

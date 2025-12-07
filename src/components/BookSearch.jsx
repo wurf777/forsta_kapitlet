@@ -57,13 +57,13 @@ const BookSearch = ({ onBookAdded }) => {
             </div>
 
             {showResults && results.length > 0 && (
-                <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
+                <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 md:max-h-96 overflow-y-auto">
                     {results.map((book) => (
                         <div
                             key={book.id}
                             className="group border-b border-gray-100 last:border-b-0 transition-all"
                         >
-                            <div className="flex gap-3 p-3 hover:bg-gray-50 cursor-pointer">
+                            <div className="flex gap-2 md:gap-3 p-2.5 md:p-3 hover:bg-gray-50 cursor-pointer">
                                 <div className="w-12 h-16 bg-gray-200 rounded flex-shrink-0 overflow-hidden">
                                     {book.cover ? (
                                         <img src={book.cover} alt={book.title} className="w-full h-full object-cover" />
