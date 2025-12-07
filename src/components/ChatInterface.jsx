@@ -130,23 +130,23 @@ const ChatInterface = ({ className, onClose }) => {
     };
 
     return (
-        <div className={`flex flex-col bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden ${className || 'h-[600px]'}`}>
+        <div className={`flex flex-col bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden ${className || 'h-[500px] md:h-[600px]'}`}>
             {/* Header */}
-            <div className="bg-accent/10 p-4 border-b border-accent/20 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white shadow-sm">
-                        <Sparkles size={20} />
+            <div className="bg-accent/10 p-3 md:p-4 border-b border-accent/20 flex items-center justify-between gap-2 md:gap-3">
+                <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                    <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-accent flex items-center justify-center text-white shadow-sm flex-shrink-0">
+                        <Sparkles size={18} className="md:w-5 md:h-5" />
                     </div>
-                    <div>
-                        <h3 className="font-heading font-bold text-gray-900">{t('chat.bibbiName')}</h3>
-                        <p className="text-xs text-accent font-medium">
+                    <div className="min-w-0">
+                        <h3 className="font-heading font-bold text-gray-900 text-sm md:text-base truncate">{t('chat.bibbiName')}</h3>
+                        <p className="text-xs text-accent font-medium truncate">
                             {context?.type === 'book' ? `Pratar om: ${context.data.title}` : t('chat.bibbiRole')}
                         </p>
                     </div>
                 </div>
                 {onClose && (
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-black/5 transition-colors">
-                        <X size={20} />
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-black/5 transition-colors flex-shrink-0">
+                        <X size={18} className="md:w-5 md:h-5" />
                     </button>
                 )}
             </div>

@@ -86,45 +86,45 @@ const Home = () => {
     // Guest View (Landing Page)
     if (!isAuthenticated) {
         return (
-            <div className="space-y-16">
-                <section className="text-center py-20 space-y-8">
-                    <h1 className="text-6xl font-heading text-gray-900 leading-tight">
+            <div className="space-y-12 md:space-y-16">
+                <section className="text-center py-12 md:py-20 space-y-6 md:space-y-8 px-4">
+                    <h1 className="text-3xl md:text-5xl lg:text-6xl font-heading text-gray-900 leading-tight">
                         {t('home.heroTitle')} <span className="text-accent">{t('home.heroTitleHighlight')}</span>
                     </h1>
-                    <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+                    <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
                         {t('home.subtitle')}
                     </p>
-                    <div className="flex justify-center gap-4 pt-8">
+                    <div className="flex justify-center gap-4 pt-4 md:pt-8">
                         <Link
                             to="/beta-signup"
-                            className="btn btn-primary text-lg px-8 py-3 shadow-lg hover:shadow-xl transition-all"
+                            className="btn btn-primary text-base md:text-lg px-6 md:px-8 py-2.5 md:py-3 shadow-lg hover:shadow-xl transition-all"
                         >
                             Kom igång
                         </Link>
                     </div>
                 </section>
 
-                <section className="grid md:grid-cols-3 gap-8 text-center max-w-5xl mx-auto px-4">
-                    <div className="p-6 bg-white rounded-xl shadow-md">
+                <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 text-center max-w-5xl mx-auto px-4">
+                    <div className="p-5 md:p-6 bg-white rounded-xl shadow-md">
                         <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4 text-accent">
                             <Book size={24} />
                         </div>
                         <h3 className="text-lg font-bold mb-2">Spara dina böcker</h3>
-                        <p className="text-gray-600">Samla allt du läser, vill läsa och har läst på ett ställe.</p>
+                        <p className="text-gray-600 text-sm md:text-base">Samla allt du läser, vill läsa och har läst på ett ställe.</p>
                     </div>
-                    <div className="p-6 bg-white rounded-xl shadow-md">
+                    <div className="p-5 md:p-6 bg-white rounded-xl shadow-md">
                         <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4 text-accent">
                             <Sparkles size={24} />
                         </div>
                         <h3 className="text-lg font-bold mb-2">AI-rekommendationer</h3>
-                        <p className="text-gray-600">Få personliga boktips från vår AI-bibliotekarie Bibbi.</p>
+                        <p className="text-gray-600 text-sm md:text-base">Få personliga boktips från vår AI-bibliotekarie Bibbi.</p>
                     </div>
-                    <div className="p-6 bg-white rounded-xl shadow-md">
+                    <div className="p-5 md:p-6 bg-white rounded-xl shadow-md sm:col-span-2 md:col-span-1">
                         <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4 text-accent">
                             <Star size={24} />
                         </div>
                         <h3 className="text-lg font-bold mb-2">Betygsätt & Recensera</h3>
-                        <p className="text-gray-600">Sätt betyg och skriv egna anteckningar om dina läsupplevelser.</p>
+                        <p className="text-gray-600 text-sm md:text-base">Sätt betyg och skriv egna anteckningar om dina läsupplevelser.</p>
                     </div>
                 </section>
             </div>
@@ -133,17 +133,17 @@ const Home = () => {
 
     // Authenticated User View (Dashboard)
     return (
-        <div className="space-y-10">
+        <div className="space-y-8 md:space-y-10">
             {/* Hero Section - Compact */}
-            <section className="text-center py-8 space-y-4">
-                <h1 className="text-4xl font-heading text-gray-900">
+            <section className="text-center py-6 md:py-8 space-y-3 md:space-y-4 px-4">
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-heading text-gray-900">
                     {t('home.heroTitle')} <span className="text-accent">{t('home.heroTitleHighlight')}</span>
                 </h1>
-                <div className="flex justify-center gap-4 pt-2">
-                    <Link to="/recommendations" className="btn btn-primary px-6 py-2">
+                <div className="flex flex-col sm:flex-row justify-center gap-3 md:gap-4 pt-2">
+                    <Link to="/recommendations" className="btn btn-primary px-5 md:px-6 py-2">
                         {t('home.getRecommendations')}
                     </Link>
-                    <Link to="/books" className="btn btn-secondary px-6 py-2">
+                    <Link to="/books" className="btn btn-secondary px-5 md:px-6 py-2">
                         {t('home.myLibrary')}
                     </Link>
                 </div>
@@ -151,34 +151,34 @@ const Home = () => {
 
             {/* Stats Overview */}
             {stats.total > 0 && (
-                <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="card text-center py-4">
+                <section className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                    <div className="card text-center py-3 md:py-4 px-2">
                         <div className="flex items-center justify-center gap-2 text-accent mb-1">
-                            <Book size={18} />
+                            <Book size={16} className="md:w-[18px] md:h-[18px]" />
                         </div>
-                        <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
-                        <p className="text-sm text-gray-500">{t('home.stats.totalBooks')}</p>
+                        <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.total}</p>
+                        <p className="text-xs md:text-sm text-gray-500">{t('home.stats.totalBooks')}</p>
                     </div>
-                    <div className="card text-center py-4">
+                    <div className="card text-center py-3 md:py-4 px-2">
                         <div className="flex items-center justify-center gap-2 text-green-500 mb-1">
-                            <TrendingUp size={18} />
+                            <TrendingUp size={16} className="md:w-[18px] md:h-[18px]" />
                         </div>
-                        <p className="text-3xl font-bold text-gray-900">{stats.read}</p>
-                        <p className="text-sm text-gray-500">{t('home.stats.booksRead')}</p>
+                        <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.read}</p>
+                        <p className="text-xs md:text-sm text-gray-500">{t('home.stats.booksRead')}</p>
                     </div>
-                    <div className="card text-center py-4">
+                    <div className="card text-center py-3 md:py-4 px-2">
                         <div className="flex items-center justify-center gap-2 text-yellow-500 mb-1">
-                            <Star size={18} />
+                            <Star size={16} className="md:w-[18px] md:h-[18px]" />
                         </div>
-                        <p className="text-3xl font-bold text-gray-900">{stats.avgRating || '-'}</p>
-                        <p className="text-sm text-gray-500">{t('home.stats.avgRating')}</p>
+                        <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.avgRating || '-'}</p>
+                        <p className="text-xs md:text-sm text-gray-500">{t('home.stats.avgRating')}</p>
                     </div>
-                    <div className="card text-center py-4">
+                    <div className="card text-center py-3 md:py-4 px-2">
                         <div className="flex items-center justify-center gap-2 text-blue-500 mb-1">
-                            <BookOpen size={18} />
+                            <BookOpen size={16} className="md:w-[18px] md:h-[18px]" />
                         </div>
-                        <p className="text-3xl font-bold text-gray-900">{stats.reading}</p>
-                        <p className="text-sm text-gray-500">{t('home.stats.currentlyReading')}</p>
+                        <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.reading}</p>
+                        <p className="text-xs md:text-sm text-gray-500">{t('home.stats.currentlyReading')}</p>
                     </div>
                 </section>
             )}
@@ -358,10 +358,10 @@ const Home = () => {
 
             {/* Empty State - Only if no books at all */}
             {stats.total === 0 && (
-                <section className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-                    <Book size={48} className="mx-auto text-gray-300 mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-700 mb-2">{t('home.startJourney')}</h3>
-                    <p className="text-gray-500 mb-6">
+                <section className="text-center py-8 md:py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 px-4">
+                    <Book size={40} className="mx-auto text-gray-300 mb-4 md:w-12 md:h-12" />
+                    <h3 className="text-lg md:text-xl font-semibold text-gray-700 mb-2">{t('home.startJourney')}</h3>
+                    <p className="text-sm md:text-base text-gray-500 mb-6">
                         {t('home.emptyLibrary')}
                     </p>
                     <Link to="/books" className="btn btn-primary">

@@ -115,11 +115,11 @@ const Profile = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-serif font-bold text-stone-900 mb-2">{t('profile.title')}</h1>
-            <p className="text-stone-600 mb-8">{t('profile.subtitle')}</p>
+        <div className="max-w-4xl mx-auto px-4">
+            <h1 className="text-2xl md:text-3xl font-serif font-bold text-stone-900 mb-2">{t('profile.title')}</h1>
+            <p className="text-sm md:text-base text-stone-600 mb-6 md:mb-8">{t('profile.subtitle')}</p>
 
-            <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 mb-6 md:mb-8">
                 {/* Favorites Column */}
                 <div>
                     <Section title={`❤️ ${t('profile.favorites')}`}>
@@ -276,8 +276,8 @@ const Profile = () => {
 };
 
 const Section = ({ title, children }) => (
-    <div className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-stone-100">
-        <h2 className="text-xl font-serif font-bold text-stone-800 mb-4">{title}</h2>
+    <div className="mb-6 md:mb-8 p-4 md:p-6 bg-white rounded-xl shadow-sm border border-stone-100">
+        <h2 className="text-lg md:text-xl font-serif font-bold text-stone-800 mb-3 md:mb-4">{title}</h2>
         {children}
     </div>
 );
@@ -313,17 +313,17 @@ const ListInput = ({ value, onChange, onAdd, placeholder, list, suggestions = []
 const ItemList = ({ items, onDelete }) => (
     <div className="flex flex-wrap gap-2">
         {items.map((item, index) => (
-            <span key={index} className="inline-flex items-center px-3 py-1 rounded-full bg-stone-100 text-stone-700 border border-stone-200">
-                {item}
+            <span key={index} className="inline-flex items-center px-2.5 md:px-3 py-1 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-sm">
+                <span className="truncate max-w-[150px] md:max-w-none">{item}</span>
                 <button
                     onClick={() => onDelete(item)}
-                    className="ml-2 text-stone-400 hover:text-red-500 font-bold"
+                    className="ml-1.5 md:ml-2 text-stone-400 hover:text-red-500 font-bold"
                 >
                     ×
                 </button>
             </span>
         ))}
-        {items.length === 0 && <span className="text-stone-400 italic text-sm">Inga tillagda än.</span>}
+        {items.length === 0 && <span className="text-stone-400 italic text-xs md:text-sm">Inga tillagda än.</span>}
     </div>
 );
 

@@ -98,8 +98,8 @@ const BookDetail = () => {
     }
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <Link to="/books" className="inline-flex items-center gap-2 text-gray-500 hover:text-accent mb-6 transition-colors">
+        <div className="max-w-4xl mx-auto px-4">
+            <Link to="/books" className="inline-flex items-center gap-2 text-gray-500 hover:text-accent mb-4 md:mb-6 transition-colors">
                 <ArrowLeft size={20} />
                 {t('bookDetail.backToLibrary')}
             </Link>
@@ -107,27 +107,27 @@ const BookDetail = () => {
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                 <div className="md:flex">
                     {/* Cover Section */}
-                    <div className="md:w-1/3 bg-gray-100 p-8 flex items-center justify-center">
+                    <div className="md:w-1/3 bg-gray-100 p-6 md:p-8 flex items-center justify-center">
                         {book.cover ? (
-                            <img src={book.cover} alt={book.title} className="w-48 shadow-xl rounded-md" />
+                            <img src={book.cover} alt={book.title} className="w-40 md:w-48 shadow-xl rounded-md" />
                         ) : (
-                            <div className="w-48 aspect-[2/3] bg-white shadow-xl rounded-md flex items-center justify-center text-gray-300">
-                                <BookOpen size={64} />
+                            <div className="w-40 md:w-48 aspect-[2/3] bg-white shadow-xl rounded-md flex items-center justify-center text-gray-300">
+                                <BookOpen size={48} className="md:w-16 md:h-16" />
                             </div>
                         )}
                     </div>
 
                     {/* Info Section */}
-                    <div className="md:w-2/3 p-8">
+                    <div className="md:w-2/3 p-5 md:p-8">
                         <div className="flex justify-between items-start mb-4">
-                            <div>
-                                <h1 className="text-3xl font-heading font-bold text-gray-900 mb-2">{book.title}</h1>
-                                <p className="text-xl text-gray-600 flex items-center gap-2">
-                                    <User size={18} />
-                                    {book.author}
+                            <div className="flex-1 min-w-0 pr-3">
+                                <h1 className="text-2xl md:text-3xl font-heading font-bold text-gray-900 mb-2">{book.title}</h1>
+                                <p className="text-lg md:text-xl text-gray-600 flex items-center gap-2">
+                                    <User size={16} className="md:w-[18px] md:h-[18px] flex-shrink-0" />
+                                    <span className="truncate">{book.author}</span>
                                 </p>
                             </div>
-                            <div className="bg-accent/10 text-accent px-3 py-1 rounded-full text-sm font-semibold">
+                            <div className="bg-accent/10 text-accent px-2.5 md:px-3 py-1 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap flex-shrink-0">
                                 {book.status}
                             </div>
                         </div>
@@ -167,17 +167,17 @@ const BookDetail = () => {
 
                         {/* Service Links */}
                         {serviceLinks.length > 0 && (
-                            <div className="mb-8 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
-                                <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
+                            <div className="mb-6 md:mb-8 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                                <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2 text-sm md:text-base">
                                     <ExternalLink size={18} />
                                     {t('bookDetail.findBook')}
                                 </h3>
                                 {profile && (profile.preferredFormats?.length > 0 || profile.preferredServices?.length > 0) ? (
-                                    <p className="text-sm text-blue-800 mb-3">
+                                    <p className="text-xs md:text-sm text-blue-800 mb-3">
                                         {t('bookDetail.basedOnPreferences')} ({profile.preferredFormats?.join(', ') || t('bookDetail.allFormats')}):
                                     </p>
                                 ) : (
-                                    <p className="text-sm text-blue-800 mb-3">
+                                    <p className="text-xs md:text-sm text-blue-800 mb-3">
                                         {t('bookDetail.noPreferencesMessage')} <Link to="/profile" className="underline font-medium">{t('bookDetail.profile')}</Link> {t('bookDetail.forPersonalSuggestions')}
                                     </p>
                                 )}
@@ -188,10 +188,10 @@ const BookDetail = () => {
                                             href={link.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-blue-200 rounded-lg text-sm font-medium text-blue-900 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                                            className="inline-flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 md:py-2 bg-white border border-blue-200 rounded-lg text-xs md:text-sm font-medium text-blue-900 hover:bg-blue-50 hover:border-blue-300 transition-colors"
                                         >
-                                            <span>{link.name}</span>
-                                            <ExternalLink size={14} />
+                                            <span className="truncate max-w-[150px] md:max-w-none">{link.name}</span>
+                                            <ExternalLink size={12} className="md:w-3.5 md:h-3.5 flex-shrink-0" />
                                         </a>
                                     ))}
                                 </div>
