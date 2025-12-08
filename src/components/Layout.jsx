@@ -63,6 +63,14 @@ const Layout = () => {
                       <User size={16} className="inline mr-2" />
                       Profil
                     </Link>
+                    <Link
+                      to="/admin"
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      <User size={16} className="inline mr-2" />
+                      Admin
+                    </Link>
                     <button
                       onClick={() => {
                         logout();
@@ -146,6 +154,14 @@ const Layout = () => {
                     >
                       <User size={20} />
                       <span>{user?.name || user?.email}</span>
+                    </Link>
+                    <Link
+                      to="/admin"
+                      className="flex items-center gap-2 p-2 text-gray-700 hover:text-accent rounded-lg hover:bg-gray-100 transition-colors"
+                      onClick={() => setShowMobileMenu(false)}
+                    >
+                      <User size={20} />
+                      <span>Admin</span>
                     </Link>
                     <button
                       onClick={() => {

@@ -173,6 +173,40 @@ export const api = {
             });
         },
     },
+
+    // Admin user management
+    admin: {
+        listUsers: async (search = '', limit = 50, offset = 0) => {
+            const params = new URLSearchParams({
+                limit: limit.toString(),
+                offset: offset.toString()
+            });
+            if (search) {
+                params.append('search', search);
+            }
+            return apiFetch(`/admin/users.php?${params.toString()}`);
+        },
+
+        createUser: async (userData) => {
+            return apiFetch('/admin/users.php', {
+                method: 'POST',
+                body: JSON.stringify(userData),
+            });
+        },
+
+        updateUser: async (userId, updates) => {
+            return apiFetch('/admin/users.php', {
+                method: 'PUT',
+                body: JSON.stringify({ id: userId, ...updates }),
+            });
+        },
+
+        deleteUser: async (userId) => {
+            return apiFetch(`/admin/users.php?id=${userId}`, {
+                method: 'DELETE',
+            });
+        },
+    },
 };
 
 export { APIError };

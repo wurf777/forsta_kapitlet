@@ -98,6 +98,13 @@ function sendResponse($data, $statusCode = 200) {
 }
 
 /**
+ * Send success response
+ */
+function sendSuccess($data, $statusCode = 200) {
+    sendResponse($data, $statusCode);
+}
+
+/**
  * Send error response
  */
 function sendError($message, $statusCode = 400) {

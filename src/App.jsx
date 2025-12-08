@@ -8,6 +8,7 @@ import BookDetail from './pages/BookDetail';
 import Recommendations from './pages/Recommendations';
 import Profile from './pages/Profile';
 import BetaSignup from './pages/BetaSignup';
+import Admin from './pages/Admin';
 import ScrollToTop from './components/ScrollToTop';
 
 import ProtectedRoute from './components/ProtectedRoute';
@@ -43,6 +44,7 @@ function App() {
                 <Profile />
               </ProtectedRoute>
             } />
+            <Route path="admin" element={<Admin />} />
             {/* Handle index.html suffix if server serves it explicitly */}
             <Route path="index.html" element={<Navigate to="/" replace />} />
             {/* Add more routes here as needed */}

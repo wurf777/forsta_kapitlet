@@ -31,15 +31,19 @@ En React-applikation för att hantera din personliga boklista med AI-driven reko
 
 ## 📋 Förutsättningar
 
+### Lokal utveckling
 - Node.js 18+
 - npm eller yarn
+- Docker Desktop (för lokal databas och API)
+
+### Produktion (one.com)
 - one.com hosting-konto med:
   - MySQL-databas
   - PHP-support
   - FTP/SFTP-åtkomst
   - Mail-tjänst
 
-## 🔧 Installation
+## 🔧 Installation & Lokal utveckling
 
 ### 1. Klona projektet
 ```bash
@@ -60,16 +64,58 @@ cp .env.example .env
 Redigera `.env`:
 ```env
 VITE_GEMINI_API_KEY=din_gemini_api_key
-VITE_API_BASE_URL=https://dinsite.one.com/api
+VITE_API_BASE_URL=http://localhost:8080
 VITE_ENABLE_LOCAL_DB=true
 ```
 
-### 4. Starta utvecklingsserver
+### 4. Starta Docker-tjänsterna
+```bash
+docker-compose up -d
+```
+
+Detta startar:
+- **MySQL-databas** på port 3306
+- **PHP API-server** på port 8080
+- **phpMyAdmin** på port 8081
+
+### 5. Starta React utvecklingsserver
 ```bash
 npm run dev
 ```
 
-Öppna http://localhost:5173
+### 6. Öppna applikationen
+- **Frontend**: http://localhost:5173/
+- **API**: http://localhost:8080
+- **phpMyAdmin**: http://localhost:8081
+  - Användarnamn: `root`
+  - Lösenord: `rootpassword`
+- **Admin panel**: http://localhost:5173/admin
+  - För användarhantering och att skapa nya konton
+
+**OBS:** I lokal utveckling används rot-URL (`/`). I produktion på one.com används `/forsta-kapitlet/` som base-URL.
+
+### Testa från mobil
+
+Vite-servern är konfigurerad att lyssna på alla nätverksgränssnitt. När du kör `npm run dev` får du en Network-URL (t.ex. `http://192.168.1.123:5173/`) som du kan använda från din mobil. Se till att mobilen och datorn är på samma WiFi-nätverk.
+
+### Användbara Docker-kommandon
+
+```bash
+# Se status på containers
+docker-compose ps
+
+# Se loggar (följ i realtid)
+docker-compose logs -f
+
+# Stoppa alla tjänster
+docker-compose down
+
+# Stoppa och radera databas-data
+docker-compose down -v
+
+# Starta om en specifik tjänst
+docker-compose restart api
+```
 
 ## 🚢 Deployment till one.com
 
