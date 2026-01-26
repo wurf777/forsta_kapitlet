@@ -26,7 +26,7 @@ En React-applikation för att hantera din personliga boklista med AI-driven reko
 - one.com hosting
 
 ### AI & Externa API:er
-- Google Gemini 2.0 Flash (Bibbi)
+- Google Gemini 2.5 Flash (Bibbi)
 - Google Books API (backup)
 
 ## 📋 Förutsättningar

@@ -20,7 +20,7 @@ export const sendMessageToBibbi = async (message, history, modes = null, profile
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         // Get user's book library for context
         const userBooks = await getLibrary();
@@ -146,7 +146,7 @@ export const getBookRecommendations = async (userBooks = null, profile = null) =
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         // Get user's book library
         const library = userBooks || await getLibrary();
@@ -230,7 +230,7 @@ export const analyzeChatForPreferences = async (history, profile = null) => {
     if (!genAI || history.length < 2) return null;
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         // Only look at the last few messages to save context and focus on recent topics
         const recentMessages = history
@@ -352,7 +352,7 @@ export const getDailyTip = async (profile = null) => {
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const library = await getLibrary();
 
         if (library.length === 0) {
