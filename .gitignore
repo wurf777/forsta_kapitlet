@@ -25,3 +25,8 @@ dist-ssr
 *.sw?
 api/.env.one
 api/.env.one.co
+
+# Local tool config / generated artifacts
+.claude/
+feedback/*.csv
+reproduction_output.txt

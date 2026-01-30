@@ -3,6 +3,7 @@ import { Sparkles, Plus, Loader2 } from 'lucide-react';
 import { getBookRecommendations } from '../services/gemini';
 import { searchBooks } from '../services/googleBooks';
 import { addToLibrary, getUserProfile } from '../services/storage';
+import MarkdownText from './MarkdownText';
 
 const BookRecommendationsList = () => {
     const [recommendations, setRecommendations] = useState([]);
@@ -194,9 +195,7 @@ const BookRecommendationsList = () => {
                                             )}
                                         </div>
 
-                                        <p className="text-sm text-gray-700 mb-3 italic">
-                                            "{book.reason}"
-                                        </p>
+                                        <MarkdownText text={book.reason} className="text-sm text-gray-700 mb-3 italic space-y-2" />
 
                                         {/* Metadata Chips */}
                                         {book.aiMetadata && (

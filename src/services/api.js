@@ -172,6 +172,17 @@ export const api = {
                 method: 'DELETE',
             });
         },
+
+        getProfile: async () => {
+            return apiFetch('/user/profile.php');
+        },
+
+        updateProfile: async (profileData) => {
+            return apiFetch('/user/profile.php', {
+                method: 'PUT',
+                body: JSON.stringify(profileData),
+            });
+        },
     },
 
     // Admin user management
@@ -204,6 +215,13 @@ export const api = {
         deleteUser: async (userId) => {
             return apiFetch(`/admin/users.php?id=${userId}`, {
                 method: 'DELETE',
+            });
+        },
+
+        updateBook: async (bookId, data) => {
+            return apiFetch('/books/update.php', {
+                method: 'PUT',
+                body: JSON.stringify({ id: bookId, ...data }),
             });
         },
     },

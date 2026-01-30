@@ -87,6 +87,11 @@ export const addToLibrary = async (book) => {
 };
 
 export const updateBookStatus = async (bookId, updates) => {
+    // Auto-set progress to 100 when status changes to "Läst"
+    if (updates.status === 'Läst' && updates.progress === undefined) {
+        updates = { ...updates, progress: 100 };
+    }
+
     if (isAuthenticated()) {
         try {
             // Find book's database ID
@@ -194,16 +199,69 @@ const DEFAULT_PROFILE = {
 };
 
 export const getUserProfile = () => {
-    // Profile is still in localStorage for now
-    // TODO: Move to database in future
     const stored = localStorage.getItem(PROFILE_KEY);
     return stored ? { ...DEFAULT_PROFILE, ...JSON.parse(stored) } : DEFAULT_PROFILE;
 };
+
+/**
+ * Fetch profile from backend and merge into localStorage.
+ * Call this after login to hydrate local state from the database.
+ */
+export const fetchUserProfile = async () => {
+    if (!isAuthenticated()) return getUserProfile();
+
+    try {
+        const data = await api.user.getProfile();
+        const serverProfile = data.profile || {};
+
+        // Map backend structure to frontend structure
+        const merged = {
+            ...DEFAULT_PROFILE,
+            favoriteAuthors: serverProfile.favoriteAuthors || [],
+            favoriteGenres: serverProfile.favoriteGenres || [],
+            blocklist: {
+                authors: serverProfile.blockedAuthors || [],
+                genres: serverProfile.blockedGenres || [],
+                books: []
+            },
+            preferredFormats: serverProfile.preferences?.preferredFormats || [],
+            preferredServices: serverProfile.preferences?.preferredServices || [],
+            modes: serverProfile.preferences?.modes || {}
+        };
+
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(merged));
+        return merged;
+    } catch (error) {
+        console.error('Failed to fetch profile from API, using localStorage:', error);
+        return getUserProfile();
+    }
+};
+
+/**
+ * Convert frontend profile structure to the flat format the backend expects.
+ */
+const profileToApiFormat = (profile) => ({
+    favoriteAuthors: profile.favoriteAuthors || [],
+    favoriteGenres: profile.favoriteGenres || [],
+    blockedAuthors: profile.blocklist?.authors || [],
+    blockedGenres: profile.blocklist?.genres || [],
+    preferredFormats: profile.preferredFormats || [],
+    preferredServices: profile.preferredServices || [],
+    modes: profile.modes || {}
+});
 
 export const updateUserProfile = (updates) => {
     const profile = getUserProfile();
     const newProfile = { ...profile, ...updates };
     localStorage.setItem(PROFILE_KEY, JSON.stringify(newProfile));
+
+    // Sync to backend when authenticated (fire-and-forget)
+    if (isAuthenticated()) {
+        api.user.updateProfile(profileToApiFormat(newProfile)).catch(error => {
+            console.error('Failed to sync profile to API:', error);
+        });
+    }
+
     return newProfile;
 };
 

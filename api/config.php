@@ -82,6 +82,20 @@ function sanitize($data) {
 }
 
 /**
+ * Sanitize URL without HTML-encoding query params
+ */
+function sanitizeUrl($data) {
+    if ($data === null) {
+        return '';
+    }
+    $value = trim((string)$data);
+    if ($value === '') {
+        return '';
+    }
+    return filter_var($value, FILTER_SANITIZE_URL);
+}
+
+/**
  * Validate email
  */
 function validateEmail($email) {
@@ -200,6 +214,21 @@ function requireAuth() {
     $user = getCurrentUser();
     if (!$user) {
         sendError('Unauthorized', 401);
+    }
+    return $user;
+}
+
+/**
+ * Require admin authentication
+ */
+function requireAdmin() {
+    $user = requireAuth();
+    $db = getDB();
+    $stmt = $db->prepare("SELECT is_admin FROM users WHERE id = :id LIMIT 1");
+    $stmt->execute(['id' => $user['user_id']]);
+    $row = $stmt->fetch();
+    if (!$row || !$row['is_admin']) {
+        sendError('Forbidden', 403);
     }
     return $user;
 }

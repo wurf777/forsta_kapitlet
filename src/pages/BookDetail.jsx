@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Star, ArrowLeft, MessageCircle, BookOpen, Calendar, User, Trash2, ExternalLink } from 'lucide-react';
-import { getBookById, updateBookStatus, removeFromLibrary, getUserProfile } from '../services/storage';
+import { Star, ArrowLeft, MessageCircle, BookOpen, Calendar, User, Trash2, ExternalLink, Pencil } from 'lucide-react';
+import { getBookById, updateBookStatus, removeFromLibrary, getUserProfile, addToLibrary } from '../services/storage';
 import { getServiceLinks } from '../services/serviceLinks';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/useAuth';
 import { useBibbi } from '../context/BibbiContext';
 import { api } from '../services/api';
+import MarkdownText from '../components/MarkdownText';
 
 const BookDetail = () => {
     const { t } = useLanguage();
+    const { isAdmin } = useAuth();
     const { id } = useParams();
     const navigate = useNavigate();
     const [book, setBook] = useState(null);
@@ -20,6 +23,10 @@ const BookDetail = () => {
     const [profile, setProfile] = useState(null);
     const [serviceLinks, setServiceLinks] = useState([]);
     const [isFromAPI, setIsFromAPI] = useState(false);
+    const [isAdminEditing, setIsAdminEditing] = useState(false);
+    const [adminEditData, setAdminEditData] = useState({});
+    const [adminSaving, setAdminSaving] = useState(false);
+    const [isCoverCleared, setIsCoverCleared] = useState(false);
 
     const { setBookContext, clearContext, openChat } = useBibbi();
 
@@ -79,10 +86,69 @@ const BookDetail = () => {
         setIsEditing(false);
     };
 
+    const handleStatusChange = (newStatus) => {
+        setEditedStatus(newStatus);
+        if (newStatus === 'Läst') {
+            setEditedProgress(100);
+        }
+    };
+
     const handleDelete = () => {
         if (window.confirm(`${t('bookDetail.deleteConfirm')} "${book.title}"?`)) {
             removeFromLibrary(id);
             navigate('/books');
+        }
+    };
+
+    const handleAdminEdit = () => {
+        setAdminEditData({
+            title: book.title || '',
+            description: book.synopsis || book.description || '',
+            page_count: book.pages || book.page_count || 0,
+            published_date: book.published || book.published_date || '',
+            publisher: book.publisher || '',
+            cover_url: book.cover || book.cover_url || '',
+            subtitle: book.subtitle || '',
+            isbn_13: book.isbn_13 || book.isbn || '',
+            isbn_10: book.isbn_10 || '',
+        });
+        setIsCoverCleared(false);
+        setIsAdminEditing(true);
+    };
+
+    const handleAdminSave = async () => {
+        setAdminSaving(true);
+        try {
+            const bookDbId = book.dbId || book.id;
+            const normalizedCover = adminEditData.cover_url?.trim();
+            const payload = {
+                ...adminEditData,
+                cover_url: isCoverCleared ? '' : (normalizedCover || book.cover || book.cover_url || ''),
+            };
+            await api.admin.updateBook(bookDbId, payload);
+            // Update local state
+            setBook(prev => ({
+                ...prev,
+                title: adminEditData.title,
+                synopsis: adminEditData.description,
+                description: adminEditData.description,
+                pages: adminEditData.page_count,
+                page_count: adminEditData.page_count,
+                published: adminEditData.published_date,
+                published_date: adminEditData.published_date,
+                publisher: adminEditData.publisher,
+                cover: payload.cover_url,
+                cover_url: payload.cover_url,
+                subtitle: adminEditData.subtitle,
+                isbn_13: adminEditData.isbn_13,
+                isbn_10: adminEditData.isbn_10,
+            }));
+            setIsAdminEditing(false);
+        } catch (error) {
+            console.error('Failed to update book:', error);
+            alert('Kunde inte spara bokändringarna.');
+        } finally {
+            setAdminSaving(false);
         }
     };
 
@@ -132,6 +198,89 @@ const BookDetail = () => {
                             </div>
                         </div>
 
+                        {isAdmin && !isAdminEditing && (
+                            <button
+                                onClick={handleAdminEdit}
+                                className="mb-4 inline-flex items-center gap-1.5 text-sm text-accent hover:text-accent/80 transition-colors"
+                            >
+                                <Pencil size={14} />
+                                Redigera bokinfo
+                            </button>
+                        )}
+
+                        {isAdminEditing && (
+                            <div className="mb-6 space-y-3 bg-amber-50 p-4 rounded-lg border border-amber-200">
+                                <h3 className="font-bold text-amber-900 mb-2">Redigera bokinfo (admin)</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">Titel</label>
+                                        <input type="text" value={adminEditData.title} onChange={e => setAdminEditData(d => ({ ...d, title: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">Undertitel</label>
+                                        <input type="text" value={adminEditData.subtitle} onChange={e => setAdminEditData(d => ({ ...d, subtitle: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">Sidantal</label>
+                                        <input type="number" value={adminEditData.page_count} onChange={e => setAdminEditData(d => ({ ...d, page_count: parseInt(e.target.value) || 0 }))} className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">Utgivningsdatum</label>
+                                        <input type="text" value={adminEditData.published_date} onChange={e => setAdminEditData(d => ({ ...d, published_date: e.target.value }))} placeholder="YYYY-MM-DD" className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">Förlag</label>
+                                        <input type="text" value={adminEditData.publisher} onChange={e => setAdminEditData(d => ({ ...d, publisher: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent" />
+                                    </div>
+                                    <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Omslags-URL</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={adminEditData.cover_url}
+                                                onChange={e => {
+                                                    setIsCoverCleared(false);
+                                                    setAdminEditData(d => ({ ...d, cover_url: e.target.value }));
+                                                }}
+                                                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setIsCoverCleared(true);
+                                                    setAdminEditData(d => ({ ...d, cover_url: '' }));
+                                                }}
+                                                className="btn btn-secondary px-3"
+                                                title="Rensa omslagsbild"
+                                            >
+                                                Rensa
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">ISBN-13</label>
+                                        <input type="text" value={adminEditData.isbn_13} onChange={e => setAdminEditData(d => ({ ...d, isbn_13: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">ISBN-10</label>
+                                        <input type="text" value={adminEditData.isbn_10} onChange={e => setAdminEditData(d => ({ ...d, isbn_10: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1">Beskrivning</label>
+                                    <textarea value={adminEditData.description} onChange={e => setAdminEditData(d => ({ ...d, description: e.target.value }))} rows="4" className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent resize-none" />
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={handleAdminSave} disabled={adminSaving} className="btn btn-primary flex-1">
+                                        {adminSaving ? 'Sparar...' : 'Spara'}
+                                    </button>
+                                    <button onClick={() => setIsAdminEditing(false)} className="btn btn-secondary flex-1">
+                                        Avbryt
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="flex items-center gap-6 text-sm text-gray-500 mb-6 border-b border-gray-100 pb-6">
                             <span className="flex items-center gap-1">
                                 <Calendar size={16} />
@@ -152,7 +301,7 @@ const BookDetail = () => {
 
                         <div className="mb-8">
                             <h3 className="font-bold text-gray-900 mb-2">{t('bookDetail.synopsis')}</h3>
-                            <p className="text-gray-600 leading-relaxed">{book.synopsis}</p>
+                            <MarkdownText text={book.synopsis} className="text-gray-600 leading-relaxed space-y-2" />
                         </div>
 
                         {book.recommendationReason && (
@@ -161,7 +310,7 @@ const BookDetail = () => {
                                     <MessageCircle size={18} />
                                     {t('bookDetail.bibbiReason')}
                                 </h3>
-                                <p className="text-gray-700 italic">"{book.recommendationReason}"</p>
+                                <MarkdownText text={book.recommendationReason} className="text-gray-700 italic space-y-2" />
                             </div>
                         )}
 
@@ -227,7 +376,7 @@ const BookDetail = () => {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">{t('bookDetail.status')}</label>
                                     <select
                                         value={editedStatus}
-                                        onChange={(e) => setEditedStatus(e.target.value)}
+                                        onChange={(e) => handleStatusChange(e.target.value)}
                                         className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:border-accent"
                                     >
                                         <option value="Vill läsa">{t('bookDetail.wantToRead')}</option>
@@ -287,7 +436,7 @@ const BookDetail = () => {
                                 {book.notes && (
                                     <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
                                         <h3 className="font-bold text-amber-900 mb-2">📝 {t('bookDetail.myNotes')}</h3>
-                                        <p className="text-gray-700 whitespace-pre-wrap">{book.notes}</p>
+                                        <MarkdownText text={book.notes} className="text-gray-700 space-y-2" />
                                     </div>
                                 )}
                                 <div className="flex flex-col sm:flex-row gap-4">

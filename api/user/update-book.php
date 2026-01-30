@@ -64,6 +64,12 @@ try {
         $updateParams['notes'] = sanitize($data['notes']);
     }
     
+    // Auto-set progress to 100 when status is "Läst" and progress not explicitly provided
+    if (isset($data['status']) && $data['status'] === 'Läst' && !isset($data['progress'])) {
+        $updateFields[] = "progress = :progress";
+        $updateParams['progress'] = 100;
+    }
+
     // Update timestamps based on status
     if (isset($data['status'])) {
         if ($data['status'] === 'Läser' && !isset($data['startedAt'])) {

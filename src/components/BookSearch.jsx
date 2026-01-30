@@ -3,6 +3,7 @@ import { Search, Plus, Loader2 } from 'lucide-react';
 import { searchBooks } from '../services/googleBooks';
 import { addToLibrary } from '../services/storage';
 import { useLanguage } from '../context/LanguageContext';
+import MarkdownText from './MarkdownText';
 
 const BookSearch = ({ onBookAdded }) => {
     const { t } = useLanguage();
@@ -106,9 +107,10 @@ const BookSearch = ({ onBookAdded }) => {
                                 <div className="max-h-0 overflow-hidden group-hover:max-h-48 transition-all duration-300 ease-in-out">
                                     <div className="px-3 pb-3 pt-0">
                                         <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                            <p className="text-sm text-gray-700 leading-relaxed line-clamp-4">
-                                                {book.synopsis}
-                                            </p>
+                                            <MarkdownText
+                                                text={book.synopsis}
+                                                className="text-sm text-gray-700 leading-relaxed line-clamp-4"
+                                            />
                                         </div>
                                     </div>
                                 </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import { BookOpen, MessageCircle, Library, User, Sparkles, LogOut, LogIn, Menu, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import LanguageSwitcher from './LanguageSwitcher';
 import ChatInterface from './ChatInterface';
 import AuthModal from './AuthModal';

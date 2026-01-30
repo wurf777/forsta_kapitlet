@@ -62,6 +62,7 @@ try {
             'email' => $user['email'],
             'name' => $user['name'],
             'verified' => !empty($user['verified_at']),
+            'isAdmin' => !empty($user['is_admin']),
             'profile' => [
                 'favoriteAuthors' => json_decode($profile['favorite_authors'] ?? '[]'),
                 'favoriteGenres' => json_decode($profile['favorite_genres'] ?? '[]'),

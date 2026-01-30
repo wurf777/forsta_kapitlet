@@ -49,13 +49,15 @@ const Profile = () => {
 
     const removeItem = (listName, item, isBlocklist = false) => {
         if (isBlocklist) {
+            const currentList = profile.blocklist?.[listName] || [];
             const newBlocklist = {
                 ...profile.blocklist,
-                [listName]: profile.blocklist[listName].filter(i => i !== item)
+                [listName]: currentList.filter(i => i !== item)
             };
             handleUpdate({ blocklist: newBlocklist });
         } else {
-            handleUpdate({ [listName]: profile[listName].filter(i => i !== item) });
+            const currentList = profile[listName] || [];
+            handleUpdate({ [listName]: currentList.filter(i => i !== item) });
         }
     };
 
@@ -65,15 +67,14 @@ const Profile = () => {
             ? current.filter(f => f !== format)
             : [...current, format];
 
-        // If removing formats, also remove incompatible services
+        // When formats change, remove services that are no longer compatible
+        const currentServices = profile.preferredServices || [];
         if (updated.length > 0) {
-            const currentServices = profile.preferredServices || [];
             const compatibleServices = currentServices.filter(serviceId => {
                 const service = AVAILABLE_SERVICES.find(s => s.id === serviceId);
                 return service && service.types.some(type => updated.includes(type));
             });
 
-            // Only update services if some were removed
             if (compatibleServices.length !== currentServices.length) {
                 handleUpdate({
                     preferredFormats: updated,
@@ -81,6 +82,13 @@ const Profile = () => {
                 });
                 return;
             }
+        } else if (currentServices.length > 0) {
+            // All formats removed — clear services too
+            handleUpdate({
+                preferredFormats: updated,
+                preferredServices: []
+            });
+            return;
         }
 
         handleUpdate({ preferredFormats: updated });

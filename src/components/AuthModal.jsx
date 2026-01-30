@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 
 const AuthModal = ({ isOpen, onClose }) => {
     const [email, setEmail] = useState('');

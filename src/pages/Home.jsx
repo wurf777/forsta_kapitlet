@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { getLibrary, getUserProfile } from '../services/storage';
 import { getDailyTip } from '../services/gemini';
 import { useLanguage } from '../context/LanguageContext';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 
 const Home = () => {
     const { t } = useLanguage();

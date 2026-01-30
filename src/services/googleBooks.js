@@ -1,5 +1,6 @@
 // Service for interacting with Google Books API
 import { api } from './api';
+import { decodeHtmlEntities } from '../utils/text';
 
 const BASE_URL = 'https://www.googleapis.com/books/v1/volumes';
 const ENABLE_LOCAL_DB = import.meta.env.VITE_ENABLE_LOCAL_DB !== 'false'; // Default to true
@@ -112,7 +113,7 @@ export const formatBookData = (googleBook) => {
         pages: info.pageCount || 0,
         published: info.publishedDate?.substring(0, 4) || 'Okänt år',
         publishedDate: info.publishedDate || null,
-        synopsis: info.description || 'Ingen beskrivning tillgänglig.',
+        synopsis: decodeHtmlEntities(info.description || 'Ingen beskrivning tillgänglig.'),
         categories: info.categories || [],
         language: info.language || 'okänt',
         isbn: isbn

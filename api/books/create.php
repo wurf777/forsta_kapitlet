@@ -49,8 +49,8 @@ try {
         'page_count' => (int)($data['pages'] ?? 0),
         'language' => sanitize($data['language'] ?? 'sv'),
         'description' => sanitize($data['synopsis'] ?? $data['description'] ?? null),
-        'cover_url' => $data['cover'] ?? null,
-        'cover_thumbnail_url' => $data['coverThumbnail'] ?? $data['cover'] ?? null,
+        'cover_url' => sanitizeUrl($data['cover'] ?? null),
+        'cover_thumbnail_url' => sanitizeUrl($data['coverThumbnail'] ?? $data['cover'] ?? null),
         'source' => sanitize($data['source'] ?? 'google_books'),
         'data_quality_score' => calculateQualityScore($data)
     ];
