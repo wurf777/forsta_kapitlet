@@ -7,13 +7,11 @@ import MyBooks from './pages/MyBooks';
 import BookDetail from './pages/BookDetail';
 import Recommendations from './pages/Recommendations';
 import Profile from './pages/Profile';
-import BetaSignup from './pages/BetaSignup';
+import Contact from './pages/Contact';
 import Admin from './pages/Admin';
 import ScrollToTop from './components/ScrollToTop';
 
 import ProtectedRoute from './components/ProtectedRoute';
-
-// ... (existing imports)
 
 function App() {
   return (
@@ -23,7 +21,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
-            <Route path="beta-signup" element={<BetaSignup />} />
+            <Route path="contact" element={<Contact />} />
             <Route path="books" element={
               <ProtectedRoute>
                 <MyBooks />
@@ -45,9 +43,10 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="admin" element={<Admin />} />
+            {/* Redirect old beta-signup URL to contact */}
+            <Route path="beta-signup" element={<Navigate to="/contact" replace />} />
             {/* Handle index.html suffix if server serves it explicitly */}
             <Route path="index.html" element={<Navigate to="/" replace />} />
-            {/* Add more routes here as needed */}
           </Route>
         </Routes>
       </BrowserRouter>

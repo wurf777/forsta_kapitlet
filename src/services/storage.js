@@ -1,12 +1,12 @@
 /**
- * Hybrid storage service
- * Uses API when authenticated, falls back to localStorage
+ * Storage service
+ * Uses API for authenticated users
  */
 
 import { api, getAuthToken } from './api';
 
-const STORAGE_KEY = 'forsta_kapitlet_library';
 const PROFILE_KEY = 'forsta_kapitlet_profile';
+const DAILY_TIP_KEY = 'forsta_kapitlet_daily_tip';
 
 // Check if user is authenticated
 const isAuthenticated = () => {
@@ -20,69 +20,55 @@ export const getLibrary = async () => {
         try {
             return await api.user.getBooks();
         } catch (error) {
-            console.error('Failed to get books from API, using localStorage:', error);
-            // Fallback to localStorage
+            console.error('Failed to get books from API:', error);
         }
     }
 
-    // Use localStorage
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
+    return [];
 };
 
 export const addToLibrary = async (book) => {
-    if (isAuthenticated()) {
-        try {
-            // Book needs to exist in books table first
-            // If it has a dbId, use that, otherwise create it
-            let bookId = book.dbId;
-
-            if (!bookId) {
-                // Create book in database first
-                // Convert published year to proper DATE format (YYYY-MM-DD) or NULL
-                let publishedDate = null;
-                if (book.published && book.published !== 'Okänt år') {
-                    // If it's just a year, make it YYYY-01-01
-                    publishedDate = book.published.length === 4
-                        ? `${book.published}-01-01`
-                        : book.published;
-                }
-
-                const created = await api.books.create({
-                    title: book.title,
-                    author: book.author,
-                    isbn: book.isbn,
-                    synopsis: book.synopsis,
-                    cover: book.cover,
-                    pages: book.pages,
-                    publishedDate: publishedDate,
-                    language: book.language || 'sv',
-                    googleBooksId: book.googleBooksId || book.id,
-                });
-                bookId = created.book.id;
-            }
-
-            // Add to user's library
-            await api.user.addBook(
-                bookId,
-                book.status || 'Vill läsa',
-                book.rating || 0,
-                book.progress || 0,
-                book.notes || ''
-            );
-            return true;
-        } catch (error) {
-            console.error('Failed to add book via API:', error);
-            // Fallback to localStorage
-        }
+    if (!isAuthenticated()) {
+        throw new Error('Du måste vara inloggad för att lägga till böcker.');
     }
 
-    // Use localStorage
-    const library = await getLibrary();
-    if (library.some(b => b.id === book.id)) return false;
+    // Book needs to exist in books table first
+    // If it has a dbId, use that, otherwise create it
+    let bookId = book.dbId;
 
-    const newLibrary = [book, ...library];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newLibrary));
+    if (!bookId) {
+        // Create book in database first
+        // Convert published year to proper DATE format (YYYY-MM-DD) or NULL
+        let publishedDate = null;
+        if (book.published && book.published !== 'Okänt år') {
+            // If it's just a year, make it YYYY-01-01
+            publishedDate = book.published.length === 4
+                ? `${book.published}-01-01`
+                : book.published;
+        }
+
+        const created = await api.books.create({
+            title: book.title,
+            author: book.author,
+            isbn: book.isbn,
+            synopsis: book.synopsis,
+            cover: book.cover,
+            pages: book.pages,
+            publishedDate: publishedDate,
+            language: book.language || 'sv',
+            googleBooksId: book.googleBooksId || book.id,
+        });
+        bookId = created.book.id;
+    }
+
+    // Add to user's library
+    await api.user.addBook(
+        bookId,
+        book.status || 'Vill läsa',
+        book.rating || 0,
+        book.progress || 0,
+        book.notes || ''
+    );
     return true;
 };
 
@@ -92,53 +78,39 @@ export const updateBookStatus = async (bookId, updates) => {
         updates = { ...updates, progress: 100 };
     }
 
-    if (isAuthenticated()) {
-        try {
-            // Find book's database ID
-            const library = await getLibrary();
-            const book = library.find(b => b.id === bookId || b.dbId === parseInt(bookId));
-
-            if (book && book.dbId) {
-                await api.user.updateBook(book.dbId, updates);
-                return library.map(b =>
-                    b.id === bookId ? { ...b, ...updates } : b
-                );
-            }
-        } catch (error) {
-            console.error('Failed to update book via API:', error);
-        }
+    if (!isAuthenticated()) {
+        throw new Error('Du måste vara inloggad för att uppdatera böcker.');
     }
 
-    // Use localStorage
+    // Find book's database ID
     const library = await getLibrary();
-    const newLibrary = library.map(book =>
-        book.id === bookId ? { ...book, ...updates } : book
-    );
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newLibrary));
-    return newLibrary;
+    const book = library.find(b => b.id === bookId || b.dbId === parseInt(bookId));
+
+    if (book && book.dbId) {
+        await api.user.updateBook(book.dbId, updates);
+        return library.map(b =>
+            b.id === bookId ? { ...b, ...updates } : b
+        );
+    }
+
+    throw new Error('Kunde inte hitta boken.');
 };
 
 export const removeFromLibrary = async (bookId) => {
-    if (isAuthenticated()) {
-        try {
-            // Find book's database ID
-            const library = await getLibrary();
-            const book = library.find(b => b.id === bookId || b.dbId === parseInt(bookId));
-
-            if (book && book.dbId) {
-                await api.user.removeBook(book.dbId);
-                return library.filter(b => b.id !== bookId);
-            }
-        } catch (error) {
-            console.error('Failed to remove book via API:', error);
-        }
+    if (!isAuthenticated()) {
+        throw new Error('Du måste vara inloggad för att ta bort böcker.');
     }
 
-    // Use localStorage
+    // Find book's database ID
     const library = await getLibrary();
-    const newLibrary = library.filter(book => book.id !== bookId);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newLibrary));
-    return newLibrary;
+    const book = library.find(b => b.id === bookId || b.dbId === parseInt(bookId));
+
+    if (book && book.dbId) {
+        await api.user.removeBook(book.dbId);
+        return library.filter(b => b.id !== bookId);
+    }
+
+    throw new Error('Kunde inte hitta boken.');
 };
 
 export const getBookById = async (bookId) => {
@@ -255,6 +227,9 @@ export const updateUserProfile = (updates) => {
     const newProfile = { ...profile, ...updates };
     localStorage.setItem(PROFILE_KEY, JSON.stringify(newProfile));
 
+    // Invalidate daily tip cache so next Home load generates a fresh tip
+    localStorage.removeItem(DAILY_TIP_KEY);
+
     // Sync to backend when authenticated (fire-and-forget)
     if (isAuthenticated()) {
         api.user.updateProfile(profileToApiFormat(newProfile)).catch(error => {
@@ -263,53 +238,4 @@ export const updateUserProfile = (updates) => {
     }
 
     return newProfile;
-};
-
-// --- Data Export/Import ---
-
-export const exportData = async () => {
-    const library = await getLibrary();
-    const profile = getUserProfile();
-
-    const data = {
-        library,
-        profile,
-        timestamp: new Date().toISOString(),
-        version: 1
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `forsta_kapitlet_backup_${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-};
-
-export const importData = async (file) => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const data = JSON.parse(e.target.result);
-
-                if (!data.library || !data.profile) {
-                    throw new Error('Ogiltigt filformat');
-                }
-
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(data.library));
-                localStorage.setItem(PROFILE_KEY, JSON.stringify(data.profile));
-
-                resolve(true);
-            } catch (error) {
-                reject(error);
-            }
-        };
-        reader.onerror = () => reject(new Error('Kunde inte läsa filen'));
-        reader.readAsText(file);
-    });
 };

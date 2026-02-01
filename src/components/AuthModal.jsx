@@ -107,11 +107,11 @@ const AuthModal = ({ isOpen, onClose }) => {
 
                 <div className="mt-6 text-center">
                     <Link
-                        to="/beta-signup"
+                        to="/contact"
                         onClick={onClose}
                         className="text-accent hover:underline font-medium"
                     >
-                        Vill du anmäla dig till beta? Klicka här
+                        Frågor? Kontakta oss
                     </Link>
                 </div>
             </div>

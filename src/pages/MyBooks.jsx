@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import BookCard from '../components/BookCard';
 import BookSearch from '../components/BookSearch';
 import { Filter } from 'lucide-react';
@@ -7,6 +8,7 @@ import { useLanguage } from '../context/LanguageContext';
 
 const MyBooks = () => {
     const { t } = useLanguage();
+    const [searchParams] = useSearchParams();
     const [filter, setFilter] = useState('Alla');
     const [books, setBooks] = useState([]);
 
@@ -35,7 +37,7 @@ const MyBooks = () => {
             {/* Search Component */}
             <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm border border-gray-100">
                 <h3 className="font-semibold text-gray-900 mb-3 text-sm md:text-base">{t('myBooks.addNewBook')}</h3>
-                <BookSearch onBookAdded={loadBooks} />
+                <BookSearch onBookAdded={loadBooks} initialQuery={searchParams.get('q') || ''} />
             </div>
 
             {/* Tabs */}

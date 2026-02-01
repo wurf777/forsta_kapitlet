@@ -38,7 +38,6 @@ export const AuthProvider = ({ children }) => {
         api.auth.logout();
         setUser(null);
         localStorage.removeItem('user');
-        localStorage.removeItem('forsta_kapitlet_library');
         localStorage.removeItem('forsta_kapitlet_profile');
     };
 

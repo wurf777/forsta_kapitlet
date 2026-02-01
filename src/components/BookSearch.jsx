@@ -5,9 +5,9 @@ import { addToLibrary } from '../services/storage';
 import { useLanguage } from '../context/LanguageContext';
 import MarkdownText from './MarkdownText';
 
-const BookSearch = ({ onBookAdded }) => {
+const BookSearch = ({ onBookAdded, initialQuery = '' }) => {
     const { t } = useLanguage();
-    const [query, setQuery] = useState('');
+    const [query, setQuery] = useState(initialQuery);
     const [results, setResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [showResults, setShowResults] = useState(false);

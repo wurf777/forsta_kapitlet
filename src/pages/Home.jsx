@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Book, Star, Sparkles, TrendingUp, BookOpen, Clock, Lightbulb } from 'lucide-react';
+import { ArrowRight, Book, Star, Sparkles, TrendingUp, BookOpen, Clock, Lightbulb, LogIn, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getLibrary, getUserProfile } from '../services/storage';
 import { getDailyTip } from '../services/gemini';
+import { searchBooks } from '../services/googleBooks';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/useAuth';
+import AuthModal from '../components/AuthModal';
 
 const Home = () => {
     const { t } = useLanguage();
@@ -14,7 +16,9 @@ const Home = () => {
     const [stats, setStats] = useState({ total: 0, read: 0, reading: 0, wantToRead: 0, avgRating: 0, topGenres: [] });
     const [recentActivity, setRecentActivity] = useState([]);
     const [dailyTip, setDailyTip] = useState(null);
+    const [tipBook, setTipBook] = useState(null);
     const [tipLoading, setTipLoading] = useState(false);
+    const [showAuthModal, setShowAuthModal] = useState(false);
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -70,8 +74,27 @@ const Home = () => {
                 if (library.length > 0) {
                     setTipLoading(true);
                     try {
-                        const tip = await getDailyTip(profile);
-                        setDailyTip(tip);
+                        const tipResult = await getDailyTip(profile);
+                        setDailyTip(tipResult);
+
+                        // Look up the book if we got a tip
+                        if (tipResult?.title) {
+                            // Check if cached book is already in the tip result
+                            if (tipResult._book) {
+                                setTipBook(tipResult._book);
+                            } else {
+                                try {
+                                    const results = await searchBooks(`${tipResult.title} ${tipResult.author}`);
+                                    if (results.length > 0) {
+                                        setTipBook(results[0]);
+                                        // Cache the book result in localStorage alongside the tip
+                                        cacheTipBook(results[0]);
+                                    }
+                                } catch (err) {
+                                    console.error('Failed to look up tip book:', err);
+                                }
+                            }
+                        }
                     } catch (err) {
                         console.error('Failed to load daily tip:', err);
                     } finally {
@@ -82,6 +105,20 @@ const Home = () => {
             loadData();
         }
     }, [isAuthenticated]);
+
+    // Helper to cache the looked-up book in the daily tip localStorage entry
+    const cacheTipBook = (book) => {
+        try {
+            const cached = localStorage.getItem('forsta_kapitlet_daily_tip');
+            if (cached) {
+                const data = JSON.parse(cached);
+                data.tip._book = book;
+                localStorage.setItem('forsta_kapitlet_daily_tip', JSON.stringify(data));
+            }
+        } catch {
+            // Ignore cache errors
+        }
+    };
 
     // Guest View (Landing Page)
     if (!isAuthenticated) {
@@ -94,12 +131,23 @@ const Home = () => {
                     <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
                         {t('home.subtitle')}
                     </p>
-                    <div className="flex justify-center gap-4 pt-4 md:pt-8">
-                        <Link
-                            to="/beta-signup"
-                            className="btn btn-primary text-base md:text-lg px-6 md:px-8 py-2.5 md:py-3 shadow-lg hover:shadow-xl transition-all"
+                    <p className="text-sm text-gray-500 max-w-lg mx-auto">
+                        Första kapitlet är just nu i stängd beta. Har du redan ett konto? Logga in nedan. Vill du veta mer? Kontakta oss!
+                    </p>
+                    <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4 md:pt-8">
+                        <button
+                            onClick={() => setShowAuthModal(true)}
+                            className="btn btn-primary text-base md:text-lg px-6 md:px-8 py-2.5 md:py-3 shadow-lg hover:shadow-xl transition-all inline-flex items-center justify-center gap-2"
                         >
-                            Kom igång
+                            <LogIn size={20} />
+                            Logga in
+                        </button>
+                        <Link
+                            to="/contact"
+                            className="btn btn-secondary text-base md:text-lg px-6 md:px-8 py-2.5 md:py-3 shadow-lg hover:shadow-xl transition-all inline-flex items-center justify-center gap-2"
+                        >
+                            <Mail size={20} />
+                            Kontakta oss
                         </Link>
                     </div>
                 </section>
@@ -127,6 +175,8 @@ const Home = () => {
                         <p className="text-gray-600 text-sm md:text-base">Sätt betyg och skriv egna anteckningar om dina läsupplevelser.</p>
                     </div>
                 </section>
+
+                <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
             </div>
         );
     }
@@ -288,7 +338,7 @@ const Home = () => {
                     {tipLoading ? (
                         <div className="card bg-accent/5 border-accent/20 animate-pulse">
                             <div className="flex gap-4">
-                                <div className="w-12 h-12 bg-accent/20 rounded-full flex-shrink-0"></div>
+                                <div className="w-16 h-24 bg-accent/20 rounded flex-shrink-0"></div>
                                 <div className="flex-1 space-y-2">
                                     <div className="h-4 bg-accent/20 rounded w-3/4"></div>
                                     <div className="h-3 bg-accent/20 rounded w-1/2"></div>
@@ -299,12 +349,21 @@ const Home = () => {
                     ) : dailyTip && (
                         <div className="card bg-accent/5 border-accent/20">
                             <div className="flex gap-4">
-                                <div className="w-12 h-12 bg-accent/20 rounded-full flex-shrink-0 flex items-center justify-center">
-                                    <Sparkles size={24} className="text-accent" />
-                                </div>
+                                {tipBook?.cover ? (
+                                    <Link to={tipBook.dbId ? `/book/${tipBook.dbId}` : `/books?q=${encodeURIComponent(dailyTip.title)}`} className="w-16 h-24 bg-gray-200 rounded flex-shrink-0 overflow-hidden">
+                                        <img src={tipBook.cover} alt={dailyTip.title} className="w-full h-full object-cover" />
+                                    </Link>
+                                ) : (
+                                    <div className="w-12 h-12 bg-accent/20 rounded-full flex-shrink-0 flex items-center justify-center">
+                                        <Sparkles size={24} className="text-accent" />
+                                    </div>
+                                )}
                                 <div className="flex-1">
                                     <p className="font-semibold text-gray-900">
-                                        {dailyTip.title} <span className="font-normal text-gray-600">av {dailyTip.author}</span>
+                                        <Link to={tipBook?.dbId ? `/book/${tipBook.dbId}` : `/books?q=${encodeURIComponent(dailyTip.title)}`} className="hover:text-accent transition-colors">
+                                            {dailyTip.title}
+                                        </Link>
+                                        {' '}<span className="font-normal text-gray-600">av {dailyTip.author}</span>
                                     </p>
                                     <p className="text-sm text-gray-600 mt-1">{dailyTip.reason}</p>
                                     <Link to="/recommendations#top" className="text-accent text-sm hover:underline mt-2 inline-block">

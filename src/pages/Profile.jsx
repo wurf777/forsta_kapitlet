@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getUserProfile, updateUserProfile, exportData, importData, getUniqueAuthors, getUniqueGenres } from '../services/storage';
+import { getUserProfile, updateUserProfile, getUniqueAuthors, getUniqueGenres } from '../services/storage';
 import { AVAILABLE_SERVICES, AVAILABLE_FORMATS } from '../services/serviceLinks';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -100,26 +100,6 @@ const Profile = () => {
             ? current.filter(s => s !== serviceId)
             : [...current, serviceId];
         handleUpdate({ preferredServices: updated });
-    };
-
-    const handleExport = () => {
-        exportData();
-    };
-
-    const handleImport = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        try {
-            await importData(file);
-            setProfile(getUserProfile()); // Refresh state
-            setAuthorSuggestions(getUniqueAuthors()); // Refresh suggestions
-            setGenreSuggestions(getUniqueGenres());
-            alert(t('profile.importSuccess'));
-            window.location.reload();
-        } catch (error) {
-            alert(t('profile.importError') + ' ' + error.message);
-        }
     };
 
     return (
@@ -255,30 +235,6 @@ const Profile = () => {
                 </div>
             </Section>
 
-            {/* Data Management Section */}
-            <Section title={`💾 ${t('profile.dataManagement')}`}>
-                <p className="text-stone-600 mb-4 text-sm">
-                    {t('profile.dataSubtitle')}
-                </p>
-                <div className="flex gap-4">
-                    <button
-                        onClick={handleExport}
-                        className="px-4 py-2 bg-stone-200 text-stone-800 rounded-lg hover:bg-stone-300 transition-colors font-medium"
-                    >
-                        {t('profile.export')}
-                    </button>
-
-                    <label className="px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors font-medium cursor-pointer">
-                        {t('profile.import')}
-                        <input
-                            type="file"
-                            accept=".json"
-                            onChange={handleImport}
-                            className="hidden"
-                        />
-                    </label>
-                </div>
-            </Section>
         </div>
     );
 };
