@@ -1,16 +1,55 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, User, Sparkles, Check, X } from 'lucide-react';
-import { sendMessageToBibbi, analyzeChatForPreferences } from '../services/gemini';
+import { sendMessageToBibbi, analyzeChatForPreferences, sendPreferenceReaction, PREFERENCE_MAPS } from '../services/gemini';
 import { getUserProfile, updateUserProfile } from '../services/storage';
 import { useLanguage } from '../context/LanguageContext';
 import { useBibbi } from '../context/BibbiContext';
+import ChatMessage from './ChatMessage';
 
 const ChatInterface = ({ className, onClose }) => {
     const { t } = useLanguage();
-    const { messages, setMessages, modes, context } = useBibbi();
+    const { messages, setMessages, modes, setModes, context } = useBibbi();
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef(null);
+
+    const handlePreferenceChange = async (type, newValue) => {
+        const oldValue = modes[type];
+        if (oldValue === newValue) return;
+
+        const oldLabel = PREFERENCE_MAPS[type]?.[oldValue] || oldValue;
+        const newLabel = PREFERENCE_MAPS[type]?.[newValue] || newValue;
+        const typeName = { tempo: 'Tempo', mood: 'Stämning', length: 'Längd' }[type] || type;
+
+        // Update modes
+        const updatedModes = { ...modes, [type]: newValue };
+        setModes(updatedModes);
+
+        // Add system message showing the change
+        const changeMsg = {
+            id: Date.now(),
+            sender: 'system',
+            type: 'preference-change',
+            text: `${typeName}: ${oldLabel} → ${newLabel}`
+        };
+        setMessages(prev => [...prev, changeMsg]);
+
+        // Get Bibbi's reaction
+        setIsTyping(true);
+        try {
+            const profile = getUserProfile();
+            const responseText = await sendPreferenceReaction(type, oldValue, newValue, messages, updatedModes, profile, context);
+            setMessages(prev => [...prev, {
+                id: Date.now() + 1,
+                sender: 'bibbi',
+                text: responseText
+            }]);
+        } catch (error) {
+            console.error('Error getting preference reaction:', error);
+        } finally {
+            setIsTyping(false);
+        }
+    };
 
     // Initialize welcome message if empty
     useEffect(() => {
@@ -158,6 +197,16 @@ const ChatInterface = ({ className, onClose }) => {
                         return <SuggestionCard key={msg.id} msg={msg} onAccept={handleAcceptSuggestion} onDismiss={() => setMessages(prev => prev.filter(m => m.id !== msg.id))} />;
                     }
 
+                    if (msg.sender === 'system' && msg.type === 'preference-change') {
+                        return (
+                            <div key={msg.id} className="flex justify-center">
+                                <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                                    {msg.text}
+                                </span>
+                            </div>
+                        );
+                    }
+
                     return (
                         <div
                             key={msg.id}
@@ -169,7 +218,12 @@ const ChatInterface = ({ className, onClose }) => {
                                     : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
                                     }`}
                             >
-                                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                                <ChatMessage
+                                    text={msg.text}
+                                    sender={msg.sender}
+                                    modes={modes}
+                                    onPreferenceChange={handlePreferenceChange}
+                                />
                             </div>
                         </div>
                     );

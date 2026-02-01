@@ -1,5 +1,18 @@
 import { getLibrary } from './storage';
 
+// Preference maps (exported for use in PreferenceChip)
+export const PREFERENCE_MAPS = {
+    length: { 1: "Mycket kort/snabbt", 2: "Kort", 3: "Lagom", 4: "Långt", 5: "Episkt/Tegelsten" },
+    mood: { 1: "Ljust & Hoppfullt", 2: "Lättsamt", 3: "Neutralt", 4: "Mörkt", 5: "Mörkt & Tungt" },
+    tempo: { 1: "Långsamt & Reflekterande", 2: "Lugnt", 3: "Normalt", 4: "Snabbt", 5: "Högt & Actionfyllt" }
+};
+
+export const PREFERENCE_LABELS = {
+    tempo: { name: "Tempo", left: "Långsamt", right: "Actionfyllt" },
+    mood: { name: "Stämning", left: "Ljust", right: "Mörkt" },
+    length: { name: "Längd", left: "Kort", right: "Episkt" }
+};
+
 // Initialize Gemini API
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 let genAI = null;
@@ -70,16 +83,12 @@ export const sendMessageToBibbi = async (message, history, modes = null, profile
         // Build modes context
         let modesContext = "";
         if (modes) {
-            const lengthMap = { 1: "Mycket kort/snabbt", 2: "Kort", 3: "Lagom", 4: "Långt", 5: "Episkt/Tegelsten" };
-            const moodMap = { 1: "Ljust & Hoppfullt", 2: "Lättsamt", 3: "Neutralt", 4: "Mörkt", 5: "Mörkt & Tungt" };
-            const tempoMap = { 1: "Långsamt & Reflekterande", 2: "Lugnt", 3: "Normalt", 4: "Snabbt", 5: "Högt & Actionfyllt" };
-
             const vibes = modes.vibes?.length > 0 ? `\n- Önskad känsla/vibe: ${modes.vibes.join(', ')}` : "";
 
             modesContext = `\n\nAKTUELLT LÄSLÄGE (Vad användaren vill ha JUST NU):
-- Längd: ${lengthMap[modes.length] || "Lagom"}
-- Stämning: ${moodMap[modes.mood] || "Neutralt"}
-- Tempo: ${tempoMap[modes.tempo] || "Normalt"}${vibes}`;
+- Längd: ${PREFERENCE_MAPS.length[modes.length] || "Lagom"}
+- Stämning: ${PREFERENCE_MAPS.mood[modes.mood] || "Neutralt"}
+- Tempo: ${PREFERENCE_MAPS.tempo[modes.tempo] || "Normalt"}${vibes}`;
         }
 
         // Build specific context (e.g. current book)
@@ -117,6 +126,7 @@ PERSONLIGHET:
 
 RIKTLINJER:
 - Basera rekommendationer på användarens boklista, profil och aktuella läsläge
+- Rekommendera ALDRIG böcker som redan finns i användarens boklista. Använd listan för att förstå smaken, men föreslå alltid NYA böcker.
 - VIKTIGT: Respektera ALLTID användarens blocklista. Föreslå ALDRIG författare eller genrer som är blockerade.
 - Om användaren frågar var de kan hitta/läsa/lyssna på böcker, använd deras föredragna format och tjänster
 - Förklara VARFÖR en bok skulle passa användaren (t.ex. "Eftersom du gillar X...")
@@ -124,6 +134,14 @@ RIKTLINJER:
 - Håll svaren lagom långa (2-4 meningar vanligtvis)
 - Undvik att lista för många böcker på en gång (max 2-3 per svar)
 - Var uppmuntrande och positiv
+
+INTERAKTIVA PREFERENS-CHIP:
+- När du refererar till användarens tempo, stämning eller längd-preferens, använd markdown-länkformat: [etikett](pref:type)
+- Giltiga typer: tempo, mood, length
+- Exempel: "Du gillar [Lugnt](pref:tempo) tempo, så jag tänker att..."
+- Exempel: "Med din [Neutrala](pref:mood) stämning kanske du gillar..."
+- Använd det naturligt i meningar, inte i varje meddelande — bara när det är relevant att nämna preferenser
+- Etiketten ska vara det aktuella värdet (t.ex. "Lugnt", "Kort", "Mörkt")
 
 ${bookContext}${profileContext}${modesContext}${specificContext}`;
 
@@ -444,4 +462,25 @@ Svara ENDAST med JSON:
         console.error('Error getting daily tip:', error);
         return null;
     }
+};
+
+/**
+ * Send a preference change reaction to Bibbi
+ * @param {string} type - Preference type (tempo, mood, length)
+ * @param {number} oldValue - Previous value
+ * @param {number} newValue - New value
+ * @param {Array} history - Conversation history
+ * @param {Object} modes - Updated modes
+ * @param {Object} profile - User profile
+ * @param {Object} context - Current context
+ * @returns {Promise<string>} - Bibbi's reaction
+ */
+export const sendPreferenceReaction = async (type, oldValue, newValue, history, modes, profile, context) => {
+    const typeName = PREFERENCE_LABELS[type]?.name || type;
+    const oldLabel = PREFERENCE_MAPS[type]?.[oldValue] || oldValue;
+    const newLabel = PREFERENCE_MAPS[type]?.[newValue] || newValue;
+
+    const message = `[Användaren ändrade just sin ${typeName}-preferens från "${oldLabel}" till "${newLabel}". Reagera kort och naturligt på ändringen och ge ett uppdaterat boktips som passar det nya värdet. Max 2-3 meningar.]`;
+
+    return sendMessageToBibbi(message, history, modes, profile, context);
 };
