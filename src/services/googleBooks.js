@@ -1,6 +1,6 @@
 // Service for interacting with Google Books API
 import { api } from './api';
-import { decodeHtmlEntities } from '../utils/text';
+import { decodeHtmlEntities, normalizeBookListText, normalizeBookText } from '../utils/text';
 
 const BASE_URL = 'https://www.googleapis.com/books/v1/volumes';
 const ENABLE_LOCAL_DB = import.meta.env.VITE_ENABLE_LOCAL_DB !== 'false'; // Default to true
@@ -20,7 +20,7 @@ export const searchBooks = async (query) => {
             console.log(`Found ${localResults.length} books in local database`);
 
             // Mark local results source
-            localResults = localResults.map(book => ({ ...book, source: 'db' }));
+            localResults = normalizeBookListText(localResults).map(book => ({ ...book, source: 'db' }));
 
             // If we have enough high-quality results, return them
             if (localResults.length >= 5) {
@@ -102,7 +102,7 @@ export const formatBookData = (googleBook) => {
     const isbn = info.industryIdentifiers?.find(id => id.type === 'ISBN_13')?.identifier ||
         info.industryIdentifiers?.find(id => id.type === 'ISBN_10')?.identifier || null;
 
-    return {
+    return normalizeBookText({
         id: googleBook.id,
         title: info.title,
         author: info.authors ? info.authors.join(', ') : 'Okänd författare',
@@ -117,5 +117,5 @@ export const formatBookData = (googleBook) => {
         categories: info.categories || [],
         language: info.language || 'okänt',
         isbn: isbn
-    };
+    });
 };

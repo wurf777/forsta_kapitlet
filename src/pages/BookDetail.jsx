@@ -7,6 +7,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/useAuth';
 import { useBibbi } from '../context/BibbiContext';
 import { api } from '../services/api';
+import { normalizeBookText } from '../utils/text';
 import MarkdownText from '../components/MarkdownText';
 
 const BookDetail = () => {
@@ -39,7 +40,7 @@ const BookDetail = () => {
             if (!foundBook && !isNaN(id)) {
                 try {
                     const apiBook = await api.books.get(id);
-                    foundBook = apiBook;
+                    foundBook = normalizeBookText(apiBook);
                     setIsFromAPI(true);
                 } catch (error) {
                     console.error('Failed to fetch book from API:', error);
@@ -47,20 +48,21 @@ const BookDetail = () => {
             }
 
             if (foundBook) {
-                setBook(foundBook);
-                setEditedStatus(foundBook.status || 'Vill läsa');
-                setEditedProgress(foundBook.progress || 0);
-                setEditedRating(foundBook.rating || 0);
-                setEditedNotes(foundBook.notes || '');
+                const normalizedBook = normalizeBookText(foundBook);
+                setBook(normalizedBook);
+                setEditedStatus(normalizedBook.status || 'Vill läsa');
+                setEditedProgress(normalizedBook.progress || 0);
+                setEditedRating(normalizedBook.rating || 0);
+                setEditedNotes(normalizedBook.notes || '');
 
                 // Set Bibbi context
-                setBookContext(foundBook);
+                setBookContext(normalizedBook);
 
                 // Load user profile and generate service links
                 const userProfile = getUserProfile();
                 setProfile(userProfile);
                 const links = getServiceLinks(
-                    foundBook,
+                    normalizedBook,
                     userProfile.preferredServices,
                     userProfile.preferredFormats
                 );

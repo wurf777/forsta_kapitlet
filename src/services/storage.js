@@ -4,6 +4,7 @@
  */
 
 import { api, getAuthToken } from './api';
+import { normalizeBookListText } from '../utils/text';
 
 const PROFILE_KEY = 'forsta_kapitlet_profile';
 const DAILY_TIP_KEY = 'forsta_kapitlet_daily_tip';
@@ -18,7 +19,8 @@ const isAuthenticated = () => {
 export const getLibrary = async () => {
     if (isAuthenticated()) {
         try {
-            return await api.user.getBooks();
+            const books = await api.user.getBooks();
+            return normalizeBookListText(books);
         } catch (error) {
             console.error('Failed to get books from API:', error);
         }

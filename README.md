@@ -181,6 +181,14 @@ forsta_kapitlet/
 - `GET /api/auth/verify.php?token=xxx` - Verifiera email
 - `POST /api/auth/reset-password.php` - Återställ lösenord
 
+## ⚠️ Verifiering (nuvarande beteende)
+
+- **Utveckling**: konton auto‑verifieras (`ENVIRONMENT=development`).
+- **Produktion**: registrering skapar token och skickar verifieringsmejl; `/api/auth/verify.php` sätter `verified_at`.
+- **Inloggning**: verifiering **enforcas inte** (kontrollen i `api/auth/login.php` är kommenterad).
+- **Token‑expiry**: finns inte implementerad, även om mejlet nämner 24 timmar.
+- **Plan**: verifieringskravet är medvetet uppskjutet och kan aktiveras/utökas senare vid behov.
+
 ## 💰 Kostnad
 
 - **Hosting (one.com)**: Redan betalt
