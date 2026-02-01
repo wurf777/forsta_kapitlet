@@ -1,9 +1,26 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getLibrary } from './storage';
 
 // Initialize Gemini API
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
+let genAI = null;
+let genAILoadPromise = null;
+
+const loadGenAI = async () => {
+    if (!API_KEY) return null;
+    if (genAI) return genAI;
+    if (!genAILoadPromise) {
+        genAILoadPromise = import('@google/generative-ai')
+            .then(({ GoogleGenerativeAI }) => {
+                genAI = new GoogleGenerativeAI(API_KEY);
+                return genAI;
+            })
+            .catch((error) => {
+                genAILoadPromise = null;
+                throw error;
+            });
+    }
+    return genAILoadPromise;
+};
 
 // Storage key for daily tip
 const DAILY_TIP_KEY = 'forsta_kapitlet_daily_tip';
@@ -15,12 +32,17 @@ const DAILY_TIP_KEY = 'forsta_kapitlet_daily_tip';
  * @returns {Promise<string>} - Bibbi's response
  */
 export const sendMessageToBibbi = async (message, history, modes = null, profile = null, context = null) => {
-    if (!genAI) {
+    if (!API_KEY) {
         return "Hoppsan! Jag behöver en API-nyckel för att fungera. Lägg till din Gemini API-nyckel i .env filen (VITE_GEMINI_API_KEY).";
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const client = await loadGenAI();
+        if (!client) {
+            return "Hoppsan! Jag behöver en API-nyckel för att fungera. Lägg till din Gemini API-nyckel i .env filen (VITE_GEMINI_API_KEY).";
+        }
+
+        const model = client.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         // Get user's book library for context
         const userBooks = await getLibrary();
@@ -121,7 +143,7 @@ ${bookContext}${profileContext}${modesContext}${specificContext}`;
                 temperature: 0.9,
                 topP: 0.95,
                 topK: 40,
-                maxOutputTokens: 1024,
+                maxOutputTokens: 2048,
             }
         });
 
@@ -141,12 +163,17 @@ ${bookContext}${profileContext}${modesContext}${specificContext}`;
  * @returns {Promise<Array>} - Array of book recommendations with title, author, and reason
  */
 export const getBookRecommendations = async (userBooks = null, profile = null) => {
-    if (!genAI) {
+    if (!API_KEY) {
         throw new Error("API-nyckel saknas. Lägg till VITE_GEMINI_API_KEY i .env filen.");
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const client = await loadGenAI();
+        if (!client) {
+            throw new Error("API-nyckel saknas. Lägg till VITE_GEMINI_API_KEY i .env filen.");
+        }
+
+        const model = client.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         // Get user's book library
         const library = userBooks || await getLibrary();
@@ -227,10 +254,13 @@ Svara ENDAST med en JSON-array i följande format (ingen annan text):
  * @returns {Promise<Object|null>} - Suggested profile updates or null
  */
 export const analyzeChatForPreferences = async (history, profile = null) => {
-    if (!genAI || history.length < 2) return null;
+    if (!API_KEY || history.length < 2) return null;
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const client = await loadGenAI();
+        if (!client) return null;
+
+        const model = client.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         // Only look at the last few messages to save context and focus on recent topics
         const recentMessages = history
@@ -347,12 +377,15 @@ export const getDailyTip = async (profile = null) => {
         }
     }
 
-    if (!genAI) {
+    if (!API_KEY) {
         return null;
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const client = await loadGenAI();
+        if (!client) return null;
+
+        const model = client.getGenerativeModel({ model: "gemini-2.5-flash" });
         const library = await getLibrary();
 
         if (library.length === 0) {

@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import { BookOpen, MessageCircle, Library, User, Sparkles, LogOut, LogIn, Menu, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/useAuth';
 import LanguageSwitcher from './LanguageSwitcher';
-import ChatInterface from './ChatInterface';
 import AuthModal from './AuthModal';
 import { useBibbi } from '../context/BibbiContext';
+
+const ChatInterface = lazy(() => import('./ChatInterface'));
 
 const Layout = () => {
   const { t } = useLanguage();
@@ -207,7 +208,11 @@ const Layout = () => {
         <>
           <div className={`fixed bottom-4 md:bottom-6 right-4 md:right-6 z-50 flex flex-col items-end transition-all duration-300 ${isOpen ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0 pointer-events-none'}`}>
             <div className="mb-4 w-[calc(100vw-2rem)] md:w-[400px] max-w-[calc(100vw-2rem)] shadow-2xl rounded-xl overflow-hidden">
-              {isOpen && <ChatInterface onClose={closeChat} className="h-[calc(100vh-8rem)] md:h-[600px] md:max-h-[calc(100vh-8rem)]" />}
+              {isOpen && (
+                <Suspense fallback={<div className="h-[calc(100vh-8rem)] md:h-[600px] md:max-h-[calc(100vh-8rem)] bg-white" />}>
+                  <ChatInterface onClose={closeChat} className="h-[calc(100vh-8rem)] md:h-[600px] md:max-h-[calc(100vh-8rem)]" />
+                </Suspense>
+              )}
             </div>
           </div>
 
