@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ command }) => ({
   plugins: [react()],
   // Use /forsta-kapitlet/ for production build, / for development
-  base: command === 'build' ? '/forsta-kapitlet/' : '/',
+  base: '/',
   server: {
     host: '0.0.0.0', // Lyssna på alla nätverksgränssnitt (gör servern tillgänglig från mobil)
     port: 5173,

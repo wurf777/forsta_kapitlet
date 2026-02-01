@@ -6,10 +6,15 @@ En React-applikation för att hantera din personliga boklista med AI-driven reko
 
 - **Hybrid bokdatabas**: Använder egen MySQL-databas först, faller tillbaka till Google Books API
 - **AI-assistent Bibbi**: Personliga bokrekommendationer baserat på dina preferenser
+- **Preferenshantering i chatten**: Interaktiva chips som styr rekommendationer
 - **Användarautentisering**: Registrering, inloggning, email-verifiering, lösenordsåterställning
 - **Bokhantering**: Lägg till, betygsätta, och organisera dina böcker
+- **Dagens boktips**: Klickbart omslag med länk till bokdetalj (eller söksida om boken saknas)
 - **Passiv datainsamling**: Databasen växer automatiskt när användare söker efter böcker
+- **Sökparametrar via URL**: Förifyll sökfältet med `/books?q=`
+- **Markdown-stöd i AI-svar**: Rika svar med rubriker, listor och länkar
 - **Tvåspråkig**: Stöd för svenska och engelska
+- **Prestanda**: Lazy loading för snabbare initial laddning
 
 ## 🏗️ Teknisk stack
 
@@ -240,6 +245,12 @@ npm run build
 ### Linting
 ```bash
 npm run lint
+```
+
+### Testa API (PowerShell)
+```powershell
+.\scripts\test-api.ps1
+.\scripts\test-auth.ps1
 ```
 
 ## 🤝 Bidra
