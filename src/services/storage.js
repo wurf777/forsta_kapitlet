@@ -1,6 +1,14 @@
 /**
  * Storage service
  * Uses API for authenticated users
+ *
+ * TODO: Migrera till PWA för riktig offline-support.
+ * Se doc/TODO-pwa.md för detaljer.
+ *
+ * Nuvarande problem med localStorage-approachen:
+ * - Ingen riktig offline-upplevelse (bara preferenser cachas)
+ * - Konflikthantering saknas vid flera enheter
+ * - localStorage kan bli out-of-sync med backend
  */
 
 import { api, getAuthToken } from './api';
