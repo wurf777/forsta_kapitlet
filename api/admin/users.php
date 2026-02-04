@@ -12,6 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// Require admin authentication for all admin endpoints
+requireAdmin();
+
 // Get request method
 $method = $_SERVER['REQUEST_METHOD'];
 

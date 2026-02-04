@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Edit2, Trash2, Search, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Users, Plus, Edit2, Trash2, Search, RefreshCw, CheckCircle, XCircle, ShieldX } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/useAuth';
 
@@ -13,7 +14,27 @@ const Admin = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const { user: currentUser, updateUser } = useAuth();
+  const { user: currentUser, updateUser, isAdmin, isAuthenticated } = useAuth();
+
+  // Block access for non-admin users
+  if (!isAuthenticated || !isAdmin) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <ShieldX size={48} className="mx-auto text-red-400 mb-4" />
+          <h2 className="text-xl font-heading font-bold text-gray-900 mb-2">
+            Åtkomst nekad
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Den här sidan är endast tillgänglig för administratörer.
+          </p>
+          <Link to="/" className="btn btn-primary px-6 py-2">
+            Till startsidan
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // Form state
   const [formData, setFormData] = useState({

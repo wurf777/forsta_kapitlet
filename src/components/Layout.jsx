@@ -1,6 +1,6 @@
 import React, { useState, lazy, Suspense } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { BookOpen, MessageCircle, Library, User, Sparkles, LogOut, LogIn, Menu, X } from 'lucide-react';
+import { BookOpen, MessageCircle, Library, User, Sparkles, LogOut, LogIn, Menu, X, Shield } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/useAuth';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -12,7 +12,7 @@ const ChatInterface = lazy(() => import('./ChatInterface'));
 const Layout = () => {
   const { t } = useLanguage();
   const { isOpen, toggleChat, closeChat, openChat, isDocked } = useBibbi();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -64,14 +64,16 @@ const Layout = () => {
                       <User size={16} className="inline mr-2" />
                       Profil
                     </Link>
-                    <Link
-                      to="/admin"
-                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                      onClick={() => setShowUserMenu(false)}
-                    >
-                      <User size={16} className="inline mr-2" />
-                      Admin
-                    </Link>
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <Shield size={16} className="inline mr-2" />
+                        Admin
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         logout();
@@ -156,14 +158,16 @@ const Layout = () => {
                       <User size={20} />
                       <span>{user?.name || user?.email}</span>
                     </Link>
-                    <Link
-                      to="/admin"
-                      className="flex items-center gap-2 p-2 text-gray-700 hover:text-accent rounded-lg hover:bg-gray-100 transition-colors"
-                      onClick={() => setShowMobileMenu(false)}
-                    >
-                      <User size={20} />
-                      <span>Admin</span>
-                    </Link>
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        className="flex items-center gap-2 p-2 text-gray-700 hover:text-accent rounded-lg hover:bg-gray-100 transition-colors"
+                        onClick={() => setShowMobileMenu(false)}
+                      >
+                        <Shield size={20} />
+                        <span>Admin</span>
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         logout();
