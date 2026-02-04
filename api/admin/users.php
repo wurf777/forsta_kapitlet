@@ -78,6 +78,7 @@ function listUsers() {
                 id,
                 email,
                 name,
+                is_admin,
                 verified_at,
                 created_at,
                 updated_at
@@ -101,6 +102,7 @@ function listUsers() {
         // Format dates and add verified status
         foreach ($users as &$user) {
             $user['verified'] = !is_null($user['verified_at']);
+            $user['is_admin'] = (int)$user['is_admin'];
             $user['created_at'] = date('Y-m-d H:i:s', strtotime($user['created_at']));
             $user['updated_at'] = date('Y-m-d H:i:s', strtotime($user['updated_at']));
         }
@@ -143,6 +145,7 @@ function createUser() {
     $password = $input['password'];
     $name = isset($input['name']) ? trim($input['name']) : '';
     $verified = isset($input['verified']) ? (bool)$input['verified'] : false;
+    $isAdmin = isset($input['is_admin']) ? (int)(bool)$input['is_admin'] : 0;
 
     try {
         // Check if email already exists
@@ -158,15 +161,16 @@ function createUser() {
 
         // Insert user
         $stmt = $pdo->prepare('
-            INSERT INTO users (email, password, name, verified_at)
-            VALUES (:email, :password, :name, :verified_at)
+            INSERT INTO users (email, password, name, verified_at, is_admin)
+            VALUES (:email, :password, :name, :verified_at, :is_admin)
         ');
 
         $stmt->execute([
             ':email' => $email,
             ':password' => $hashedPassword,
             ':name' => $name,
-            ':verified_at' => $verified ? date('Y-m-d H:i:s') : null
+            ':verified_at' => $verified ? date('Y-m-d H:i:s') : null,
+            ':is_admin' => $isAdmin
         ]);
 
         $userId = $pdo->lastInsertId();
@@ -178,7 +182,8 @@ function createUser() {
                 'id' => (int)$userId,
                 'email' => $email,
                 'name' => $name,
-                'verified' => $verified
+                'verified' => $verified,
+                'is_admin' => $isAdmin
             ]
         ], 201);
 
@@ -239,6 +244,11 @@ function updateUser() {
         if (isset($input['verified'])) {
             $updates[] = 'verified_at = :verified_at';
             $params[':verified_at'] = $input['verified'] ? date('Y-m-d H:i:s') : null;
+        }
+
+        if (isset($input['is_admin'])) {
+            $updates[] = 'is_admin = :is_admin';
+            $params[':is_admin'] = (int)(bool)$input['is_admin'];
         }
 
         if (empty($updates)) {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Edit2, Trash2, Search, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
 import { api } from '../services/api';
+import { useAuth } from '../context/useAuth';
 
 const Admin = () => {
   const [users, setUsers] = useState([]);
@@ -12,18 +13,22 @@ const Admin = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const { user: currentUser, updateUser } = useAuth();
 
   // Form state
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     name: '',
-    verified: false
+    verified: false,
+    isAdmin: false
   });
 
   useEffect(() => {
     loadUsers();
   }, [searchQuery]);
+
+  const getIsAdmin = (user) => !!(user.is_admin ?? user.isAdmin);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -45,7 +50,9 @@ const Admin = () => {
     setSuccess(null);
 
     try {
-      await api.admin.createUser(formData);
+      const payload = { ...formData, is_admin: formData.isAdmin };
+      delete payload.isAdmin;
+      await api.admin.createUser(payload);
       setSuccess('User created successfully!');
       setShowCreateModal(false);
       resetForm();
@@ -61,10 +68,20 @@ const Admin = () => {
     setSuccess(null);
 
     try {
-      await api.admin.updateUser(selectedUser.id, formData);
+      const payload = { ...formData, is_admin: formData.isAdmin };
+      delete payload.isAdmin;
+      await api.admin.updateUser(selectedUser.id, payload);
       setSuccess('User updated successfully!');
       setShowEditModal(false);
       resetForm();
+      if (selectedUser?.id === currentUser?.id) {
+        updateUser({
+          email: formData.email,
+          name: formData.name,
+          verified: formData.verified,
+          isAdmin: formData.isAdmin
+        });
+      }
       loadUsers();
     } catch (err) {
       setError(err.message || 'Failed to update user');
@@ -89,12 +106,14 @@ const Admin = () => {
   };
 
   const openEditModal = (user) => {
+    const isAdmin = getIsAdmin(user);
     setSelectedUser(user);
     setFormData({
       email: user.email,
       password: '',
       name: user.name || '',
-      verified: user.verified
+      verified: user.verified,
+      isAdmin
     });
     setShowEditModal(true);
   };
@@ -104,7 +123,8 @@ const Admin = () => {
       email: '',
       password: '',
       name: '',
-      verified: false
+      verified: false,
+      isAdmin: false
     });
     setSelectedUser(null);
   };
@@ -191,6 +211,7 @@ const Admin = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
@@ -211,6 +232,17 @@ const Admin = () => {
                           <span className="inline-flex items-center gap-1 text-gray-400">
                             <XCircle className="w-4 h-4" />
                             Unverified
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        {getIsAdmin(user) ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700">
+                            Admin
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                            User
                           </span>
                         )}
                       </td>
@@ -298,6 +330,18 @@ const Admin = () => {
                       Mark as verified
                     </label>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="admin"
+                      checked={formData.isAdmin}
+                      onChange={(e) => setFormData({ ...formData, isAdmin: e.target.checked })}
+                      className="w-4 h-4 text-purple-600 rounded"
+                    />
+                    <label htmlFor="admin" className="text-sm text-gray-700">
+                      Grant admin rights
+                    </label>
+                  </div>
                 </div>
                 <div className="flex gap-3 mt-6">
                   <button
@@ -370,6 +414,18 @@ const Admin = () => {
                     />
                     <label htmlFor="verified-edit" className="text-sm text-gray-700">
                       Mark as verified
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="admin-edit"
+                      checked={formData.isAdmin}
+                      onChange={(e) => setFormData({ ...formData, isAdmin: e.target.checked })}
+                      className="w-4 h-4 text-purple-600 rounded"
+                    />
+                    <label htmlFor="admin-edit" className="text-sm text-gray-700">
+                      Grant admin rights
                     </label>
                   </div>
                 </div>

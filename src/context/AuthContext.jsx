@@ -41,6 +41,15 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('forsta_kapitlet_profile');
     };
 
+    const updateUser = (patch) => {
+        setUser(prev => {
+            if (!prev) return prev;
+            const next = { ...prev, ...patch };
+            localStorage.setItem('user', JSON.stringify(next));
+            return next;
+        });
+    };
+
     const value = {
         user,
         loading,
@@ -49,6 +58,7 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
+        updateUser,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
