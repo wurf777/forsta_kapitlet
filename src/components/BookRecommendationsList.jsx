@@ -18,22 +18,19 @@ const BookRecommendationsList = () => {
         setEnrichedBooks([]);
 
         try {
-            // Get recommendations from Gemini (now includes metadata!)
             const profile = getUserProfile();
             const recs = await getBookRecommendations(null, profile);
             setRecommendations(recs);
 
-            // Fetch Google Books data for covers etc.
             const enriched = await Promise.all(
                 recs.map(async (rec) => {
                     try {
                         const googleResults = await searchBooks(`${rec.title} ${rec.author}`);
-                        const bookData = googleResults[0]; // Take first result
+                        const bookData = googleResults[0];
 
                         return {
                             ...rec,
                             googleBook: bookData || null,
-                            // Metadata is now directly on 'rec' from Gemini
                             aiMetadata: {
                                 vibe: rec.vibe,
                                 tempo: rec.tempo,
@@ -71,17 +68,15 @@ const BookRecommendationsList = () => {
         if (book.googleBook) {
             bookToAdd = {
                 ...book.googleBook,
-                // Merge AI metadata if available
                 categories: book.aiMetadata?.genre_specifics ? [book.aiMetadata.genre_specifics, ...book.googleBook.categories] : book.googleBook.categories,
                 vibe: book.aiMetadata?.vibe,
                 tempo: book.aiMetadata?.tempo,
                 themes: book.aiMetadata?.themes,
-                recommendationReason: book.reason // Persist the reason why Bibbi recommended this
+                recommendationReason: book.reason
             };
         } else {
-            // Fallback if Google Books data is missing
             bookToAdd = {
-                id: `ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                id: `ai-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
                 title: book.title,
                 author: book.author,
                 cover: null,
@@ -111,12 +106,11 @@ const BookRecommendationsList = () => {
 
     return (
         <div className="space-y-6">
-            {/* Header with button */}
-            <div className="text-center">
+            <div className="text-center card border-warm/20 bg-gradient-to-br from-bg-card to-bg-secondary/70">
                 <button
                     onClick={handleGetRecommendations}
                     disabled={isLoading}
-                    className="btn btn-primary px-8 py-3 text-lg font-semibold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                    className="btn btn-primary px-6 py-3 text-base md:text-lg font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                 >
                     {isLoading ? (
                         <>
@@ -130,88 +124,82 @@ const BookRecommendationsList = () => {
                         </>
                     )}
                 </button>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-sm text-stone-600 mt-3">
                     Bibbi analyserar din boklista och hittar 10 nya böcker åt dig
                 </p>
             </div>
 
-            {/* Error message */}
             {error && (
-                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl">
                     <p className="font-semibold">Något gick fel</p>
                     <p className="text-sm">{error}</p>
                 </div>
             )}
 
-            {/* Loading state */}
             {isLoading && (
-                <div className="text-center py-8">
+                <div className="text-center py-8 card bg-bg-card">
                     <Loader2 size={40} className="animate-spin text-accent mx-auto mb-3" />
-                    <p className="text-gray-600">Bibbi letar efter perfekta böcker åt dig...</p>
+                    <p className="text-stone-600">Bibbi letar efter perfekta böcker åt dig...</p>
                 </div>
             )}
 
-            {/* Recommendations list */}
             {enrichedBooks.length > 0 && (
                 <div className="space-y-4">
-                    <h3 className="font-heading text-xl font-bold text-gray-900">
-                        Bibbi's rekommendationer
+                    <h3 className="font-heading text-2xl text-gray-900 mb-0">
+                        Bibbis rekommendationer
                     </h3>
                     <div className="space-y-3">
                         {enrichedBooks.map((book, index) => (
                             <div
                                 key={index}
-                                className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                                className="card p-4 border-warm/20"
                             >
                                 <div className="flex gap-4">
-                                    {/* Book cover */}
                                     {book.googleBook?.cover ? (
                                         <img
                                             src={book.googleBook.cover}
                                             alt={book.title}
-                                            className="w-20 h-32 object-cover rounded shadow-sm flex-shrink-0"
+                                            className="w-20 h-32 object-cover rounded-lg shadow-sm flex-shrink-0 book-tilt"
                                         />
                                     ) : (
-                                        <div className="w-20 h-32 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
-                                            <span className="text-gray-400 text-xs">Ingen bild</span>
+                                        <div className="w-20 h-32 bg-stone-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <span className="text-stone-400 text-xs">Ingen bild</span>
                                         </div>
                                     )}
 
-                                    {/* Book info */}
                                     <div className="flex-grow min-w-0">
-                                        <div className="flex justify-between items-start">
+                                        <div className="flex justify-between items-start gap-2">
                                             <div>
-                                                <h4 className="font-bold text-gray-900 truncate text-lg">
+                                                <h4 className="font-heading text-2xl text-gray-900 leading-tight mb-1">
                                                     {book.title}
                                                 </h4>
-                                                <p className="text-stone-600 mb-2 font-medium">
+                                                <p className="text-stone-600 mb-2 font-medium text-sm md:text-base">
                                                     av {book.author}
                                                 </p>
                                             </div>
                                             {book.aiMetadata?.tempo && (
-                                                <span className="text-xs font-bold px-2 py-1 bg-stone-100 rounded text-stone-600" title="Tempo">
+                                                <span className="text-xs font-bold px-2 py-1 bg-accent-light rounded-full text-accent-dark border border-accent/20" title="Tempo">
                                                     ⚡ {book.aiMetadata.tempo}/5
                                                 </span>
                                             )}
                                         </div>
 
-                                        <MarkdownText text={book.reason} className="text-sm text-gray-700 mb-3 italic space-y-2" />
+                                        <MarkdownText text={book.reason} className="text-sm text-stone-700 mb-3 italic space-y-2" />
 
-                                        {/* Metadata Chips */}
                                         {book.aiMetadata && (
                                             <div className="flex flex-wrap gap-2 mb-2">
                                                 {book.aiMetadata.vibe && (
-                                                    <span className="text-xs px-2 py-1 bg-purple-50 text-purple-700 rounded-full border border-purple-100">
+                                                    <span className="text-xs px-2 py-1 bg-warm-light text-warm-dark rounded-full border border-warm/20">
                                                         ✨ {book.aiMetadata.vibe}
                                                     </span>
                                                 )}
                                                 {book.aiMetadata.genre_specifics && (
-                                                    <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-100">
+                                                    <span className="text-xs px-2 py-1 bg-highlight/15 text-stone-800 rounded-full border border-highlight/25">
                                                         📚 {book.aiMetadata.genre_specifics}
                                                     </span>
                                                 )}
                                                 {book.aiMetadata.themes?.slice(0, 2).map(theme => (
-                                                    <span key={theme} className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                                                    <span key={theme} className="text-xs px-2 py-1 bg-stone-100 text-stone-600 rounded-full">
                                                         {theme}
                                                     </span>
                                                 ))}
@@ -219,11 +207,10 @@ const BookRecommendationsList = () => {
                                         )}
                                     </div>
 
-                                    {/* Add button */}
                                     <button
                                         onClick={() => handleAddBook(book)}
                                         disabled={false}
-                                        className="btn btn-secondary px-3 py-2 rounded-lg flex-shrink-0 self-start disabled:opacity-30 disabled:cursor-not-allowed"
+                                        className="btn btn-secondary px-3 py-2 rounded-xl flex-shrink-0 self-start disabled:opacity-30 disabled:cursor-not-allowed"
                                         title="Lägg till i min lista"
                                     >
                                         <Plus size={20} />
@@ -235,10 +222,9 @@ const BookRecommendationsList = () => {
                 </div>
             )}
 
-            {/* Empty state */}
             {!isLoading && !error && enrichedBooks.length === 0 && recommendations.length === 0 && (
-                <div className="text-center py-12 text-gray-500">
-                    <Sparkles size={48} className="mx-auto mb-3 text-gray-300" />
+                <div className="text-center py-12 card text-stone-600">
+                    <Sparkles size={48} className="mx-auto mb-3 text-warm" />
                     <p>Klicka på knappen ovan för att få personliga bokrekommendationer!</p>
                 </div>
             )}

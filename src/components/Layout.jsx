@@ -1,6 +1,6 @@
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { BookOpen, MessageCircle, Library, User, Sparkles, LogOut, LogIn, Menu, X, Shield } from 'lucide-react';
+import { BookOpen, MessageCircle, User, Sparkles, LogOut, LogIn, Menu, X, Shield, Quote } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/useAuth';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -16,10 +16,20 @@ const Layout = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [quoteIndex, setQuoteIndex] = useState(0);
+  const footerQuotes = [t('footer.quoteOne'), t('footer.quoteTwo'), t('footer.quoteThree')];
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setQuoteIndex((prev) => (prev + 1) % footerQuotes.length);
+    }, 6000);
+
+    return () => clearInterval(intervalId);
+  }, [footerQuotes.length]);
 
   return (
     <div className="min-h-screen flex flex-col relative">
-      <header className="bg-white shadow-sm sticky top-0 z-50">
+      <header className="bg-bg-card/95 backdrop-blur shadow-sm sticky top-0 z-50 border-b border-stone-200/80">
         <div className="container flex items-center justify-between py-4 px-4">
           <Link to="/" className="flex items-center gap-2 text-accent hover:text-accent-dark transition-colors">
             <BookOpen className="w-6 h-6 md:w-8 md:h-8" />
@@ -201,9 +211,13 @@ const Layout = () => {
         <Outlet />
       </main>
 
-      <footer className="bg-gray-100 border-t border-gray-200 mt-auto">
-        <div className="container py-8 text-center text-gray-500">
-          <p>&copy; {new Date().getFullYear()} Första Kapitlet. Skapad för bokälskare.</p>
+      <footer className="bg-gradient-to-r from-bg-secondary via-bg-card to-bg-secondary border-t border-stone-200 mt-auto">
+        <div className="container py-8 text-center text-stone-600 space-y-3">
+          <div className="inline-flex items-center gap-2 text-sm bg-white/60 px-3 py-1.5 rounded-full border border-stone-200">
+            <Quote size={14} className="text-warm-dark" />
+            <span className="italic">{footerQuotes[quoteIndex]}</span>
+          </div>
+          <p className="text-sm">&copy; {new Date().getFullYear()} Första Kapitlet. {t('footer.tagline')}</p>
         </div>
       </footer>
 

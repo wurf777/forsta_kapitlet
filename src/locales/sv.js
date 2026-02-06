@@ -11,6 +11,9 @@ const sv = {
         heroTitle: "Hitta din nästa",
         heroTitleHighlight: "favoritbok",
         subtitle: "Välkommen till Första Kapitlet. Samla dina böcker, få personliga rekommendationer av Bibbi, och upptäck nya världar.",
+        heroPersonalSubtitle: "Din digitala bokhylla väntar. Fortsätt där du slutade eller låt Bibbi guida dig till nästa läsäventyr.",
+        welcomeBack: "Välkommen tillbaka",
+        bookLover: "bokvän",
         getRecommendations: "Få boktips",
         myLibrary: "Mitt bibliotek",
         readingNow: "Läser just nu",
@@ -28,10 +31,14 @@ const sv = {
         },
         wantToReadTitle: "Vill läsa",
         noCurrentlyReading: "Du läser ingen bok just nu",
+        readingNudge: "Dags att slå upp en ny berättelse?",
+        findRecommendation: "Hitta något att läsa",
         noWantToRead: "Inga böcker i läskön",
         bibbiTip: "Bibbis tips",
+        bibbiGreeting: "Ett personligt tips från Bibbi",
         moreTips: "Fler tips",
         recentActivity: "Senaste aktivitet",
+        updatedLabel: "Uppdaterad",
     },
     bookDetail: {
         backToLibrary: "Tillbaka till biblioteket",
@@ -157,6 +164,12 @@ const sv = {
     common: {
         loading: "Laddar...",
         error: "Ett fel uppstod.",
+    },
+    footer: {
+        tagline: "Skapad för bokälskare.",
+        quoteOne: "En läsare lever tusen liv före sin död.",
+        quoteTwo: "Varje bok är en ny början.",
+        quoteThree: "Läsning är vila för själen.",
     },
     formats: {
         audiobook: "Ljudbok",

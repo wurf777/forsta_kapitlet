@@ -30,7 +30,7 @@ const ModeSelector = ({ modes, onChange }) => {
                 step="1"
                 value={value || 3}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-stone-800"
+                className="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-accent"
             />
             <div className="flex justify-between text-xs text-stone-400 mt-1 px-1">
                 <span>|</span><span>|</span><span>|</span><span>|</span><span>|</span>
@@ -44,8 +44,8 @@ const ModeSelector = ({ modes, onChange }) => {
             <button
                 onClick={() => toggleChip(label)}
                 className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-full text-xs md:text-sm font-medium transition-colors border ${isSelected
-                    ? 'bg-stone-800 text-white border-stone-800'
-                    : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400'
+                    ? 'bg-accent text-white border-accent'
+                    : 'bg-bg-card text-stone-600 border-stone-200 hover:border-accent/40'
                     }`}
             >
                 {label}
@@ -63,8 +63,8 @@ const ModeSelector = ({ modes, onChange }) => {
     };
 
     return (
-        <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-stone-100 mb-6 md:mb-8">
-            <h2 className="text-base md:text-lg font-serif font-bold text-stone-800 mb-3 md:mb-4">{t('modeSelector.title')}</h2>
+        <div className="card p-4 md:p-6 mb-6 md:mb-8 border-warm/20">
+            <h2 className="text-base md:text-lg font-heading text-stone-800 mb-3 md:mb-4">{t('modeSelector.title')}</h2>
 
             <div className="space-y-2 mb-6 md:mb-8">
                 <Slider

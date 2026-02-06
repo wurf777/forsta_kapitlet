@@ -11,6 +11,9 @@ const en = {
         heroTitle: "Find your next",
         heroTitleHighlight: "favorite book",
         subtitle: "Welcome to First Chapter. Collect your books, get personal recommendations from Bibbi, and discover new worlds.",
+        heroPersonalSubtitle: "Your digital bookshelf is ready. Continue where you left off or let Bibbi guide your next read.",
+        welcomeBack: "Welcome back",
+        bookLover: "book lover",
         getRecommendations: "Get Recommendations",
         myLibrary: "My Library",
         readingNow: "Reading Now",
@@ -28,10 +31,14 @@ const en = {
         },
         wantToReadTitle: "Want to Read",
         noCurrentlyReading: "You're not reading any book right now",
+        readingNudge: "Ready to open a new story?",
+        findRecommendation: "Find something to read",
         noWantToRead: "No books in your reading queue",
         bibbiTip: "Bibbi's Tip",
+        bibbiGreeting: "A personal note from Bibbi",
         moreTips: "More tips",
         recentActivity: "Recent Activity",
+        updatedLabel: "Updated",
     },
     bookDetail: {
         backToLibrary: "Back to Library",
@@ -157,6 +164,12 @@ const en = {
     common: {
         loading: "Loading...",
         error: "An error occurred.",
+    },
+    footer: {
+        tagline: "Made for book lovers.",
+        quoteOne: "A reader lives a thousand lives before death.",
+        quoteTwo: "Every book is a new beginning.",
+        quoteThree: "Reading is rest for the soul.",
     },
     formats: {
         audiobook: "Audiobook",

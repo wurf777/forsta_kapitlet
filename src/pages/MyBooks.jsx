@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
+import { BookOpen, Compass } from 'lucide-react';
 import BookCard from '../components/BookCard';
 import BookSearch from '../components/BookSearch';
-import { Filter } from 'lucide-react';
 import { getLibrary } from '../services/storage';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -25,45 +25,41 @@ const MyBooks = () => {
         ? books
         : books.filter(book => book.status === filter);
 
+    const getTabLabel = (status) => {
+        switch (status) {
+            case 'Alla': return t('myBooks.all');
+            case 'Läser': return t('myBooks.reading');
+            case 'Vill läsa': return t('myBooks.wantToRead');
+            case 'Läst': return t('myBooks.read');
+            default: return status;
+        }
+    };
+
     return (
-        <div className="space-y-6 md:space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 px-4 md:px-0">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-heading text-gray-900">{t('myBooks.title')}</h1>
-                    <p className="text-sm md:text-base text-gray-600">{t('myBooks.subtitle')}</p>
-                </div>
+        <div className="space-y-6 md:space-y-8 fade-in-up">
+            <div className="rounded-3xl border border-warm/20 bg-gradient-to-br from-bg-card via-bg-secondary to-warm-light px-5 py-6 md:px-8 md:py-8 shadow-md">
+                <h1 className="text-2xl md:text-4xl font-heading text-gray-900 mb-2">{t('myBooks.title')}</h1>
+                <p className="text-sm md:text-lg text-stone-700 max-w-2xl">{t('myBooks.subtitle')}</p>
             </div>
 
-            {/* Search Component */}
-            <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm border border-gray-100">
-                <h3 className="font-semibold text-gray-900 mb-3 text-sm md:text-base">{t('myBooks.addNewBook')}</h3>
+            <div className="card p-4 md:p-6 border-warm/20">
+                <h3 className="font-heading text-xl text-gray-900 mb-3">{t('myBooks.addNewBook')}</h3>
                 <BookSearch onBookAdded={loadBooks} initialQuery={searchParams.get('q') || ''} />
             </div>
 
-            {/* Tabs */}
-            <div className="flex border-b border-gray-200 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+            <div className="rounded-2xl bg-bg-secondary/70 border border-stone-200 p-1.5 flex overflow-x-auto scrollbar-hide gap-1">
                 {['Alla', 'Läser', 'Vill läsa', 'Läst'].map((tab) => {
                     const count = tab === 'Alla'
                         ? books.length
                         : books.filter(b => b.status === tab).length;
 
-                    const getTabLabel = (status) => {
-                        switch (status) {
-                            case 'Alla': return t('myBooks.all');
-                            case 'Läser': return t('myBooks.reading');
-                            case 'Vill läsa': return t('myBooks.wantToRead');
-                            case 'Läst': return t('myBooks.read');
-                            default: return status;
-                        }
-                    };
-
                     return (
                         <button
                             key={tab}
                             onClick={() => setFilter(tab)}
-                            className={`px-4 md:px-6 py-2.5 md:py-3 font-medium text-xs md:text-sm whitespace-nowrap transition-colors border-b-2 ${filter === tab
-                                ? 'border-accent text-accent'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                            className={`px-3 md:px-5 py-2 md:py-2.5 font-medium text-xs md:text-sm whitespace-nowrap rounded-xl transition-all ${filter === tab
+                                ? 'bg-bg-card text-accent shadow-sm'
+                                : 'text-stone-600 hover:text-stone-900'
                                 }`}
                         >
                             {getTabLabel(tab)} ({count})
@@ -72,7 +68,6 @@ const MyBooks = () => {
                 })}
             </div>
 
-            {/* Grid */}
             {filteredBooks.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                     {filteredBooks.map((book) => (
@@ -80,15 +75,21 @@ const MyBooks = () => {
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-8 md:py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 mx-4 md:mx-0">
-                    <p className="text-gray-500 text-base md:text-lg mb-2">
+                <div className="card text-center py-10 md:py-12 bg-gradient-to-br from-bg-card to-warm-light/70 border-warm/25">
+                    <div className="w-14 h-14 rounded-full bg-warm/20 text-warm-dark mx-auto mb-3 flex items-center justify-center">
+                        {filter === 'Alla' ? <BookOpen size={28} /> : <Compass size={28} />}
+                    </div>
+                    <p className="text-gray-900 font-heading text-xl mb-2">
                         {filter === 'Alla'
                             ? t('myBooks.emptyLibrary')
-                            : `${t('myBooks.emptyCategory')} "${filter}"`}
+                            : `${t('myBooks.emptyCategory')} "${getTabLabel(filter)}"`}
                     </p>
-                    <p className="text-gray-400 text-xs md:text-sm">
+                    <p className="text-stone-600 text-sm md:text-base mb-5">
                         {t('myBooks.useSearch')}
                     </p>
+                    <Link to="/recommendations" className="btn btn-secondary text-sm px-4 py-2">
+                        {t('home.getRecommendations')}
+                    </Link>
                 </div>
             )}
         </div>

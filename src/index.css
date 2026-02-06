@@ -5,6 +5,10 @@
 @layer base {
   body {
     @apply bg-bg-primary text-gray-800 font-body antialiased;
+    background-image:
+      radial-gradient(circle at 15% 15%, rgba(193, 107, 79, 0.08), transparent 30%),
+      radial-gradient(circle at 85% 10%, rgba(43, 111, 112, 0.1), transparent 28%);
+    background-attachment: fixed;
   }
 
   h1,
@@ -14,6 +18,7 @@
   h5,
   h6 {
     @apply font-heading font-bold text-gray-900 mb-4;
+    line-height: 1.25;
   }
 
   h1 {
@@ -35,11 +40,11 @@
   }
 
   .btn {
-    @apply inline-flex items-center justify-center px-6 py-2 rounded-md font-semibold transition-all duration-200 border-2;
+    @apply inline-flex items-center justify-center px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 border-2;
   }
 
   .btn-primary {
-    @apply bg-accent border-accent text-white hover:bg-accent-dark hover:border-accent-dark hover:-translate-y-0.5 shadow-sm hover:shadow-md;
+    @apply bg-accent border-accent text-white hover:bg-accent-dark hover:border-accent-dark hover:-translate-y-0.5 shadow-md hover:shadow-lg;
   }
 
   .btn-secondary {
@@ -47,6 +52,46 @@
   }
 
   .card {
-    @apply bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-4 border border-gray-100;
+    @apply bg-bg-card rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-4 border border-stone-200/70;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border;
+  }
+
+  .status-badge-read {
+    @apply bg-emerald-100 text-emerald-800 border-emerald-200;
+  }
+
+  .status-badge-reading {
+    @apply bg-accent-light text-accent-dark border-accent/25;
+  }
+
+  .status-badge-queued {
+    @apply bg-warm-light text-warm-dark border-warm/30;
+  }
+
+  .fade-in-up {
+    animation: fade-in-up 450ms ease-out both;
+  }
+
+  .book-tilt {
+    @apply transition-transform duration-300;
+  }
+
+  .book-tilt:hover {
+    transform: translateY(-4px) rotate(-1deg);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

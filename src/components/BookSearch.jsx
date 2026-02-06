@@ -50,7 +50,7 @@ const BookSearch = ({ onBookAdded, initialQuery = '' }) => {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder={t('search.placeholder')}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+                    className="w-full pl-10 pr-4 py-3 border border-stone-200 rounded-xl bg-bg-card focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
                 />
                 {isSearching && (
                     <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-accent animate-spin" size={20} />
@@ -58,14 +58,14 @@ const BookSearch = ({ onBookAdded, initialQuery = '' }) => {
             </div>
 
             {showResults && results.length > 0 && (
-                <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 md:max-h-96 overflow-y-auto">
+                <div className="absolute z-50 w-full mt-2 bg-bg-card border border-stone-200 rounded-xl shadow-lg max-h-64 md:max-h-96 overflow-y-auto">
                     {results.map((book) => (
                         <div
                             key={book.id}
-                            className="group border-b border-gray-100 last:border-b-0 transition-all"
+                            className="group border-b border-stone-100 last:border-b-0 transition-all"
                         >
-                            <div className="flex gap-2 md:gap-3 p-2.5 md:p-3 hover:bg-gray-50 cursor-pointer">
-                                <div className="w-12 h-16 bg-gray-200 rounded flex-shrink-0 overflow-hidden">
+                            <div className="flex gap-2 md:gap-3 p-2.5 md:p-3 hover:bg-bg-secondary/60 cursor-pointer">
+                                <div className="w-12 h-16 bg-stone-200 rounded flex-shrink-0 overflow-hidden">
                                     {book.cover ? (
                                         <img src={book.cover} alt={book.title} className="w-full h-full object-cover" />
                                     ) : (
@@ -78,19 +78,19 @@ const BookSearch = ({ onBookAdded, initialQuery = '' }) => {
                                     <h4 className="font-semibold text-sm text-gray-900 truncate flex items-center gap-2">
                                         {book.title}
                                         {book.source === 'db' && (
-                                            <span className="bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded-full border border-green-200" title="Från lokal databas">
+                                            <span className="bg-emerald-100 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded-full border border-emerald-200" title="Från lokal databas">
                                                 DB
                                             </span>
                                         )}
                                         {book.source === 'google' && (
-                                            <span className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded-full border border-blue-200" title="Från Google Books">
+                                            <span className="bg-accent-light text-accent-dark text-[10px] px-1.5 py-0.5 rounded-full border border-accent/20" title="Från Google Books">
                                                 Google
                                             </span>
                                         )}
                                     </h4>
-                                    <p className="text-xs text-gray-600 truncate">{book.author}</p>
+                                    <p className="text-xs text-stone-600 truncate">{book.author}</p>
                                     {book.published && (
-                                        <p className="text-xs text-gray-500">{book.published}</p>
+                                        <p className="text-xs text-stone-500">{book.published}</p>
                                     )}
                                 </div>
                                 <button
@@ -106,10 +106,10 @@ const BookSearch = ({ onBookAdded, initialQuery = '' }) => {
                             {book.synopsis && (
                                 <div className="max-h-0 overflow-hidden group-hover:max-h-48 transition-all duration-300 ease-in-out">
                                     <div className="px-3 pb-3 pt-0">
-                                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <div className="bg-bg-secondary/50 p-3 rounded-lg border border-stone-200">
                                             <MarkdownText
                                                 text={book.synopsis}
-                                                className="text-sm text-gray-700 leading-relaxed line-clamp-4"
+                                                className="text-sm text-stone-700 leading-relaxed line-clamp-4"
                                             />
                                         </div>
                                     </div>
@@ -121,7 +121,7 @@ const BookSearch = ({ onBookAdded, initialQuery = '' }) => {
             )}
 
             {showResults && results.length === 0 && !isSearching && (
-                <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center text-gray-500">
+                <div className="absolute z-50 w-full mt-2 bg-bg-card border border-stone-200 rounded-xl shadow-lg p-4 text-center text-stone-500">
                     {t('search.noResults')} "{query}"
                 </div>
             )}
