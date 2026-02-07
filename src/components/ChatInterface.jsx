@@ -11,7 +11,7 @@ const ChatInterface = ({ className, onClose }) => {
     const { messages, setMessages, modes, setModes, context } = useBibbi();
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
-    const messagesEndRef = useRef(null);
+    const messagesContainerRef = useRef(null);
 
     const handlePreferenceChange = async (type, newValue) => {
         const oldValue = modes[type];
@@ -65,7 +65,9 @@ const ChatInterface = ({ className, onClose }) => {
     }, [messages.length, setMessages, t]);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        const container = messagesContainerRef.current;
+        if (!container) return;
+        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
     };
 
     useEffect(() => {
@@ -191,7 +193,7 @@ const ChatInterface = ({ className, onClose }) => {
             </div>
 
             {/* Messages */}
-            <div className="flex-grow overflow-y-auto p-4 space-y-4 bg-gray-50/50">
+            <div ref={messagesContainerRef} className="flex-grow overflow-y-auto p-4 space-y-4 bg-gray-50/50">
                 {messages.map((msg) => {
                     if (msg.sender === 'system' && msg.type === 'suggestion') {
                         return <SuggestionCard key={msg.id} msg={msg} onAccept={handleAcceptSuggestion} onDismiss={() => setMessages(prev => prev.filter(m => m.id !== msg.id))} />;
@@ -239,7 +241,6 @@ const ChatInterface = ({ className, onClose }) => {
                         </div>
                     </div>
                 )}
-                <div ref={messagesEndRef} />
             </div>
 
             {/* Input */}

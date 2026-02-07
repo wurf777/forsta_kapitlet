@@ -118,6 +118,30 @@ const en = {
         alwaysReady: "Always Ready",
         alwaysReadyDesc: "Bibbi is here to discuss books whenever you are.",
     },
+    guides: {
+        addReadBooks: {
+            title: "Get started: add books you've already read",
+            subtitle: "Fill your library with a few favorites and rate them — it helps Bibbi learn your taste.",
+            step1Title: "Search for the book",
+            step1Body: "Use the search field above and pick the right book from the list.",
+            step2Title: "Add it to your library",
+            step2Body: "Click the plus button to add it.",
+            step3Title: "Set status & rating",
+            step3Body: "Open the book, choose \"Read\", and click the stars. Add a short note if you want."
+        },
+        recommendations: {
+            title: "How to get recommendations from Bibbi",
+            subtitle: "Pick what suits you: quick list or personal chat.",
+            chatTitle: "Via chat",
+            chatStep1: "Describe what you like, your current mood, or mention a book you loved.",
+            chatStep2: "Adjust length, mood, and tempo if you want.",
+            chatStep3: "Ask for more tips or refine until it feels right.",
+            uiTitle: "Via the interface",
+            uiStep1: "Click \"Find new books\" to get a ready-made list.",
+            uiStep2: "Add a book with + if it looks interesting.",
+            uiStep3: "Save favorites to your library and rate them after you read."
+        }
+    },
     chat: {
         bibbiName: "Bibbi",
         bibbiRole: "Your personal book guide",

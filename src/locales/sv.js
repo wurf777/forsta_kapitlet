@@ -118,6 +118,30 @@ const sv = {
         alwaysReady: "Alltid redo",
         alwaysReadyDesc: "Oavsett tid på dygnet finns Bibbi här för att diskutera böcker.",
     },
+    guides: {
+        addReadBooks: {
+            title: "Kom igång: lägg till redan lästa böcker",
+            subtitle: "Fyll biblioteket med några favoriter och ge betyg – det hjälper Bibbi att lära känna din smak.",
+            step1Title: "Sök efter boken",
+            step1Body: "Använd sökrutan ovan och välj rätt bok i listan.",
+            step2Title: "Lägg till i biblioteket",
+            step2Body: "Klicka på plustecknet för att lägga till.",
+            step3Title: "Sätt status & betyg",
+            step3Body: "Öppna boken, välj \"Läst\" och klicka på stjärnorna. Lägg gärna till en kort anteckning."
+        },
+        recommendations: {
+            title: "Så får du rekommendationer av Bibbi",
+            subtitle: "Välj det som passar bäst: snabb lista eller personlig chatt.",
+            chatTitle: "Via chatten",
+            chatStep1: "Skriv vad du gillar, vilket humör du har, eller nämn en bok du älskade.",
+            chatStep2: "Justera längd, stämning och tempo om du vill.",
+            chatStep3: "Be om fler tips eller förtydliga tills det känns rätt.",
+            uiTitle: "Via gränssnittet",
+            uiStep1: "Klicka på \"Hitta nya böcker\" för en färdig lista.",
+            uiStep2: "Lägg till en bok med + om den ser spännande ut.",
+            uiStep3: "Spara favoriter i biblioteket och betygsätt när du läst."
+        }
+    },
     chat: {
         bibbiName: "Bibbi",
         bibbiRole: "Din personliga bokguide",

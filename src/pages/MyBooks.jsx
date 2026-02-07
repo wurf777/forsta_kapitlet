@@ -47,6 +47,43 @@ const MyBooks = () => {
                 <BookSearch onBookAdded={loadBooks} initialQuery={searchParams.get('q') || ''} />
             </div>
 
+            {books.length === 0 && (
+                <div className="card p-4 md:p-6 border-warm/20 bg-gradient-to-br from-bg-card to-bg-secondary/70">
+                    <div className="flex items-start gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center flex-shrink-0">
+                            <BookOpen size={18} />
+                        </div>
+                        <div>
+                            <h3 className="font-heading text-xl text-gray-900">{t('guides.addReadBooks.title')}</h3>
+                            <p className="text-sm text-stone-600">{t('guides.addReadBooks.subtitle')}</p>
+                        </div>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-3 text-sm text-stone-700">
+                        <div className="flex gap-3 rounded-xl border border-stone-200 bg-white/70 p-3">
+                            <span className="w-7 h-7 rounded-full bg-accent/15 text-accent flex items-center justify-center text-xs font-semibold flex-shrink-0">1</span>
+                            <div>
+                                <p className="font-semibold text-gray-900">{t('guides.addReadBooks.step1Title')}</p>
+                                <p>{t('guides.addReadBooks.step1Body')}</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-3 rounded-xl border border-stone-200 bg-white/70 p-3">
+                            <span className="w-7 h-7 rounded-full bg-accent/15 text-accent flex items-center justify-center text-xs font-semibold flex-shrink-0">2</span>
+                            <div>
+                                <p className="font-semibold text-gray-900">{t('guides.addReadBooks.step2Title')}</p>
+                                <p>{t('guides.addReadBooks.step2Body')}</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-3 rounded-xl border border-stone-200 bg-white/70 p-3">
+                            <span className="w-7 h-7 rounded-full bg-accent/15 text-accent flex items-center justify-center text-xs font-semibold flex-shrink-0">3</span>
+                            <div>
+                                <p className="font-semibold text-gray-900">{t('guides.addReadBooks.step3Title')}</p>
+                                <p>{t('guides.addReadBooks.step3Body')}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="rounded-2xl bg-bg-secondary/70 border border-stone-200 p-1.5 flex overflow-x-auto scrollbar-hide gap-1">
                 {['Alla', 'Läser', 'Vill läsa', 'Läst'].map((tab) => {
                     const count = tab === 'Alla'

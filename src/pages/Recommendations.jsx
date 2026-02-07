@@ -43,6 +43,60 @@ const Recommendations = () => {
                 </div>
             </div>
 
+            <section className="card p-5 md:p-6 border-warm/20 bg-gradient-to-br from-bg-card to-bg-secondary/70">
+                <div className="flex items-center gap-2 mb-2">
+                    <Sparkles size={18} className="text-accent" />
+                    <h2 className="font-heading text-xl text-gray-900">{t('guides.recommendations.title')}</h2>
+                </div>
+                <p className="text-sm text-stone-600 mb-4">{t('guides.recommendations.subtitle')}</p>
+                <div className="grid gap-4 md:grid-cols-2">
+                    <div className="rounded-2xl border border-stone-200 bg-white/70 p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-9 h-9 rounded-full bg-warm/20 text-warm-dark flex items-center justify-center">
+                                <MessageCircleHeart size={18} />
+                            </div>
+                            <h3 className="font-heading text-lg text-gray-900">{t('guides.recommendations.chatTitle')}</h3>
+                        </div>
+                        <ol className="space-y-2 text-sm text-stone-700">
+                            <li className="flex gap-2">
+                                <span className="w-6 h-6 rounded-full bg-accent/15 text-accent flex items-center justify-center text-xs font-semibold flex-shrink-0">1</span>
+                                <span>{t('guides.recommendations.chatStep1')}</span>
+                            </li>
+                            <li className="flex gap-2">
+                                <span className="w-6 h-6 rounded-full bg-accent/15 text-accent flex items-center justify-center text-xs font-semibold flex-shrink-0">2</span>
+                                <span>{t('guides.recommendations.chatStep2')}</span>
+                            </li>
+                            <li className="flex gap-2">
+                                <span className="w-6 h-6 rounded-full bg-accent/15 text-accent flex items-center justify-center text-xs font-semibold flex-shrink-0">3</span>
+                                <span>{t('guides.recommendations.chatStep3')}</span>
+                            </li>
+                        </ol>
+                    </div>
+                    <div className="rounded-2xl border border-stone-200 bg-white/70 p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-9 h-9 rounded-full bg-accent/10 text-accent flex items-center justify-center">
+                                <Sparkles size={18} />
+                            </div>
+                            <h3 className="font-heading text-lg text-gray-900">{t('guides.recommendations.uiTitle')}</h3>
+                        </div>
+                        <ol className="space-y-2 text-sm text-stone-700">
+                            <li className="flex gap-2">
+                                <span className="w-6 h-6 rounded-full bg-accent/15 text-accent flex items-center justify-center text-xs font-semibold flex-shrink-0">1</span>
+                                <span>{t('guides.recommendations.uiStep1')}</span>
+                            </li>
+                            <li className="flex gap-2">
+                                <span className="w-6 h-6 rounded-full bg-accent/15 text-accent flex items-center justify-center text-xs font-semibold flex-shrink-0">2</span>
+                                <span>{t('guides.recommendations.uiStep2')}</span>
+                            </li>
+                            <li className="flex gap-2">
+                                <span className="w-6 h-6 rounded-full bg-accent/15 text-accent flex items-center justify-center text-xs font-semibold flex-shrink-0">3</span>
+                                <span>{t('guides.recommendations.uiStep3')}</span>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6">
                 <div className="lg:col-span-5">
                     <BookRecommendationsList />
