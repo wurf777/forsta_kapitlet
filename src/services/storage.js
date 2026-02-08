@@ -13,6 +13,7 @@
 
 import { api, getAuthToken } from './api';
 import { normalizeBookListText } from '../utils/text';
+import { track } from './analytics';
 
 const PROFILE_KEY = 'forsta_kapitlet_profile';
 const DAILY_TIP_KEY = 'forsta_kapitlet_daily_tip';
@@ -79,6 +80,13 @@ export const addToLibrary = async (book) => {
         book.progress || 0,
         book.notes || ''
     );
+
+    track('books', 'add_to_library', {
+        book_title: book.title,
+        author: book.author,
+        source: book._trackingSource || 'search',
+    }, { bookId });
+
     return true;
 };
 
@@ -98,6 +106,11 @@ export const updateBookStatus = async (bookId, updates) => {
 
     if (book && book.dbId) {
         await api.user.updateBook(book.dbId, updates);
+        track('books', 'update_status', {
+            status: updates.status,
+            rating: updates.rating,
+            progress: updates.progress,
+        }, { bookId: book.dbId });
         return library.map(b =>
             b.id === bookId ? { ...b, ...updates } : b
         );
@@ -117,6 +130,9 @@ export const removeFromLibrary = async (bookId) => {
 
     if (book && book.dbId) {
         await api.user.removeBook(book.dbId);
+        track('books', 'remove_from_library', {
+            book_title: book.title,
+        }, { bookId: book.dbId });
         return library.filter(b => b.id !== bookId);
     }
 

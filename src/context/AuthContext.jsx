@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { api, getAuthToken } from '../services/api';
 import { AuthContext } from './AuthContextBase';
 import { fetchUserProfile } from '../services/storage';
+import { track } from '../services/analytics';
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(() => {
@@ -17,6 +18,8 @@ export const AuthProvider = ({ children }) => {
         setUser(response.user);
         localStorage.setItem('user', JSON.stringify(response.user));
 
+        track('auth', 'login', {});
+
         // Hydrate profile from backend into localStorage
         fetchUserProfile().catch(err =>
             console.error('Failed to hydrate profile on login:', err)
@@ -27,6 +30,7 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (email, password, name) => {
         const response = await api.auth.register(email, password, name);
+        track('auth', 'register', {});
         // In development, auto-login after registration
         if (response.autoVerified) {
             return login(email, password);
@@ -35,6 +39,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
+        track('auth', 'logout', {});
         api.auth.logout();
         setUser(null);
         localStorage.removeItem('user');

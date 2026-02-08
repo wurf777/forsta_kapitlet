@@ -1,6 +1,7 @@
 // Service for interacting with Google Books API
 import { api } from './api';
 import { decodeHtmlEntities, normalizeBookListText, normalizeBookText } from '../utils/text';
+import { track } from './analytics';
 
 const BASE_URL = 'https://www.googleapis.com/books/v1/volumes';
 const ENABLE_LOCAL_DB = import.meta.env.VITE_ENABLE_LOCAL_DB !== 'false'; // Default to true
@@ -70,7 +71,13 @@ export const searchBooks = async (query) => {
         */
 
         // 4. Combine and deduplicate results
-        return deduplicateBooks([...localResults, ...googleResults]);
+        const combined = deduplicateBooks([...localResults, ...googleResults]);
+        track('search', 'search', {
+            result_count: combined.length,
+            local_count: localResults.length,
+            google_count: combined.length - localResults.length,
+        }, { searchQuery: query });
+        return combined;
 
     } catch (error) {
         console.error("Error fetching from Google Books:", error);

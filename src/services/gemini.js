@@ -1,4 +1,5 @@
 import { getLibrary } from './storage';
+import { track } from './analytics';
 
 // Preference maps (exported for use in PreferenceChip)
 export const PREFERENCE_MAPS = {
@@ -167,6 +168,7 @@ ${bookContext}${profileContext}${modesContext}${specificContext}`;
 
         const result = await chat.sendMessage(message);
         const response = result.response;
+        track('bibbi', 'chat_message', { message_count_in_session: history.length });
         return response.text();
 
     } catch (error) {
@@ -257,6 +259,7 @@ Svara ENDAST med en JSON-array i följande format (ingen annan text):
         }
 
         const recommendations = JSON.parse(jsonMatch[0]);
+        track('bibbi', 'get_recommendations', { recommendation_count: recommendations.length });
         return recommendations;
 
     } catch (error) {
@@ -456,6 +459,7 @@ Svara ENDAST med JSON:
             date: new Date().toDateString()
         }));
 
+        track('bibbi', 'daily_tip', { had_tip: true, was_cached: false });
         return tip;
 
     } catch (error) {

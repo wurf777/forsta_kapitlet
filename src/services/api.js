@@ -2,6 +2,8 @@
  * API Client for one.com backend
  */
 
+import { getAnalyticsSessionId } from './analytics';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost/api';
 
 class APIError extends Error {
@@ -45,6 +47,12 @@ const apiFetch = async (endpoint, options = {}) => {
     const token = getAuthToken();
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    // Add analytics session ID
+    const sessionId = getAnalyticsSessionId();
+    if (sessionId) {
+        headers['X-Session-ID'] = sessionId;
     }
 
     const config = {
@@ -224,7 +232,18 @@ export const api = {
                 body: JSON.stringify({ id: bookId, ...data }),
             });
         },
+
+        analytics: {
+            dashboard: async (section, filters = {}) => {
+                const params = new URLSearchParams({ section, ...filters });
+                return apiFetch(`/admin/analytics/dashboard.php?${params}`);
+            },
+            exportUrl: (section, filters = {}) => {
+                const params = new URLSearchParams({ section, ...filters });
+                return `${API_BASE_URL}/admin/analytics/export.php?${params}`;
+            },
+        },
     },
 };
 
-export { APIError };
+export { APIError, API_BASE_URL };

@@ -5,6 +5,7 @@
  */
 
 require_once '../config.php';
+require_once '../helpers/analytics.php';
 
 $user = requireAuth();
 $data = getJsonInput();
@@ -65,7 +66,9 @@ try {
     ]);
     
     $db->commit();
-    
+
+    logEvent($user['user_id'], getSessionId(), 'books', 'add_to_library', [], $bookId);
+
     sendResponse([
         'success' => true,
         'message' => 'Book added to library'

@@ -5,6 +5,7 @@
  */
 
 require_once '../config.php';
+require_once '../helpers/analytics.php';
 
 $data = getJsonInput();
 
@@ -54,6 +55,8 @@ try {
     $stmt->execute(['user_id' => $user['id']]);
     $profile = $stmt->fetch();
     
+    logEvent($user['id'], getSessionId(), 'auth', 'login');
+
     sendResponse([
         'success' => true,
         'token' => $token,
