@@ -5,6 +5,7 @@
  */
 
 require_once '../config.php';
+require_once '../helpers/analytics.php';
 
 $user = requireAuth();
 
@@ -31,6 +32,8 @@ try {
         sendError('Book not in library', 404);
     }
     
+    logEvent($user['user_id'], getSessionId(), 'books', 'remove_from_library', [], $bookId);
+
     sendResponse([
         'success' => true,
         'message' => 'Book removed from library'

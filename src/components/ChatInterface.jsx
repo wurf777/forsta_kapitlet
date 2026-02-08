@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, User, Sparkles, Check, X } from 'lucide-react';
 import { sendMessageToBibbi, analyzeChatForPreferences, sendPreferenceReaction, PREFERENCE_MAPS } from '../services/gemini';
 import { getUserProfile, updateUserProfile } from '../services/storage';
+import { track } from '../services/analytics';
 import { useLanguage } from '../context/LanguageContext';
 import { useBibbi } from '../context/BibbiContext';
 import ChatMessage from './ChatMessage';
@@ -24,6 +25,7 @@ const ChatInterface = ({ className, onClose }) => {
         // Update modes
         const updatedModes = { ...modes, [type]: newValue };
         setModes(updatedModes);
+        track('bibbi', 'preference_change', { type, old_value: oldValue, new_value: newValue });
 
         // Add system message showing the change
         const changeMsg = {

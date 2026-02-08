@@ -96,6 +96,7 @@ const BookRecommendationsList = () => {
             };
         }
 
+        bookToAdd._trackingSource = 'recommendation';
         const success = addToLibrary(bookToAdd);
         if (success) {
             alert(`"${book.title}" har lagts till i din boklista!`);

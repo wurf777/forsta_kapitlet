@@ -5,6 +5,7 @@
  */
 
 require_once '../config.php';
+require_once '../helpers/analytics.php';
 
 $data = getJsonInput();
 
@@ -63,7 +64,9 @@ try {
     ]);
     
     $userId = $db->lastInsertId();
-    
+
+    logEvent($userId, getSessionId(), 'auth', 'register');
+
     // Create user profile
     $stmt = $db->prepare("
         INSERT INTO user_profiles (user_id, favorite_authors, favorite_genres, blocked_authors, blocked_genres, preferences) 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getUserProfile, updateUserProfile, getUniqueAuthors, getUniqueGenres } from '../services/storage';
 import { AVAILABLE_SERVICES, AVAILABLE_FORMATS } from '../services/serviceLinks';
 import { useLanguage } from '../context/LanguageContext';
+import { track } from '../services/analytics';
 
 const Profile = () => {
     const { t } = useLanguage();
@@ -38,11 +39,13 @@ const Profile = () => {
                 [listName]: [...currentList, item.trim()]
             };
             handleUpdate({ blocklist: newBlocklist });
+            track('profile', 'update_blocklist', { field: listName, action: 'add', value: item.trim() });
         } else {
             const currentList = profile[listName] || [];
             if (currentList.includes(item.trim())) return;
 
             handleUpdate({ [listName]: [...currentList, item.trim()] });
+            track('profile', 'update_favorites', { field: listName, action: 'add', value: item.trim() });
         }
         setItem('');
     };
@@ -55,9 +58,11 @@ const Profile = () => {
                 [listName]: currentList.filter(i => i !== item)
             };
             handleUpdate({ blocklist: newBlocklist });
+            track('profile', 'update_blocklist', { field: listName, action: 'remove', value: item });
         } else {
             const currentList = profile[listName] || [];
             handleUpdate({ [listName]: currentList.filter(i => i !== item) });
+            track('profile', 'update_favorites', { field: listName, action: 'remove', value: item });
         }
     };
 
@@ -92,6 +97,7 @@ const Profile = () => {
         }
 
         handleUpdate({ preferredFormats: updated });
+        track('profile', 'toggle_format', { format, enabled: updated.includes(format) });
     };
 
     const toggleService = (serviceId) => {
@@ -100,6 +106,7 @@ const Profile = () => {
             ? current.filter(s => s !== serviceId)
             : [...current, serviceId];
         handleUpdate({ preferredServices: updated });
+        track('profile', 'toggle_service', { service: serviceId, enabled: updated.includes(serviceId) });
     };
 
     return (
