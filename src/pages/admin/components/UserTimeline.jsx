@@ -59,9 +59,17 @@ const UserTimeline = ({ data, onBack }) => {
                 {pieData.length > 0 && (
                     <div className="bg-white rounded-lg border border-gray-200 p-4">
                         <h4 className="font-medium text-gray-900 mb-3">Funktionsfördelning</h4>
-                        <ResponsiveContainer width="100%" height={200}>
+                        <ResponsiveContainer width="100%" height={240}>
                             <PieChart>
-                                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                                <Pie
+                                    data={pieData}
+                                    dataKey="value"
+                                    nameKey="name"
+                                    cx="50%"
+                                    cy="58%"
+                                    outerRadius={80}
+                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                >
                                     {pieData.map((entry, i) => (
                                         <Cell key={i} fill={entry.color} />
                                     ))}

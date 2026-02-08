@@ -10,7 +10,7 @@ ini_set('display_errors', 0); // Set to 0 in production
 // CORS Headers - allow requests from your React app
 header('Access-Control-Allow-Origin: *'); // Change to your domain in production
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Session-ID');
 header('Content-Type: application/json; charset=utf-8');
 
 // Handle preflight requests

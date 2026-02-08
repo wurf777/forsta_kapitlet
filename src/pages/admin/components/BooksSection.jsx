@@ -82,9 +82,17 @@ const BooksSection = ({ data }) => {
                     <h3 className="font-semibold text-gray-900 mb-4">Läskonvertering</h3>
                     {conversionData.some((d) => d.value > 0) ? (
                         <>
-                            <ResponsiveContainer width="100%" height={180}>
+                            <ResponsiveContainer width="100%" height={220}>
                                 <PieChart>
-                                    <Pie data={conversionData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, value }) => `${name}: ${value}`}>
+                                    <Pie
+                                        data={conversionData}
+                                        dataKey="value"
+                                        nameKey="name"
+                                        cx="50%"
+                                        cy="56%"
+                                        outerRadius={70}
+                                        label={({ name, value }) => `${name}: ${value}`}
+                                    >
                                         {conversionData.map((entry, i) => (
                                             <Cell key={i} fill={entry.color} />
                                         ))}

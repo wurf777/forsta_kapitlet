@@ -81,12 +81,6 @@ export const addToLibrary = async (book) => {
         book.notes || ''
     );
 
-    track('books', 'add_to_library', {
-        book_title: book.title,
-        author: book.author,
-        source: book._trackingSource || 'search',
-    }, { bookId });
-
     return true;
 };
 
@@ -130,9 +124,6 @@ export const removeFromLibrary = async (bookId) => {
 
     if (book && book.dbId) {
         await api.user.removeBook(book.dbId);
-        track('books', 'remove_from_library', {
-            book_title: book.title,
-        }, { bookId: book.dbId });
         return library.filter(b => b.id !== bookId);
     }
 
