@@ -1,5 +1,8 @@
 RewriteEngine On
 
+# Prevent Apache from serving its own error page on top of our JSON errors
+ErrorDocument 500 "Internal Server Error"
+
 # Fix for Authorization header being stripped by Apache
 RewriteCond %{HTTP:Authorization} .
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

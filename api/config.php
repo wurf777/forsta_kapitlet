@@ -3,9 +3,53 @@
  * API Configuration and Database Connection
  */
 
-// Enable error reporting for development (disable in production)
+// Enable error reporting — log only, never display
 error_reporting(E_ALL);
-ini_set('display_errors', 0); // Set to 0 in production
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
+// Global exception handler — catches anything not caught by endpoint try/catch
+set_exception_handler(function (Throwable $e) {
+    error_log("[UNCAUGHT] " . $e->getFile() . ':' . $e->getLine() . ' — ' . $e->getMessage());
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+    }
+    echo json_encode([
+        'error' => 'Internal server error',
+        'debug' => ($_ENV['ENVIRONMENT'] ?? '') === 'development'
+            ? $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()
+            : null
+    ], JSON_UNESCAPED_UNICODE);
+    exit();
+});
+
+// Global error handler — converts PHP warnings/notices into exceptions
+set_error_handler(function (int $severity, string $message, string $file, int $line) {
+    // Don't throw for suppressed errors (@operator)
+    if (!(error_reporting() & $severity)) {
+        return false;
+    }
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
+// Shutdown handler — catches fatal errors that bypass the error handler
+register_shutdown_function(function () {
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        error_log("[FATAL] " . $error['file'] . ':' . $error['line'] . ' — ' . $error['message']);
+        if (!headers_sent()) {
+            http_response_code(500);
+            header('Content-Type: application/json; charset=utf-8');
+        }
+        echo json_encode([
+            'error' => 'Fatal server error',
+            'debug' => ($_ENV['ENVIRONMENT'] ?? '') === 'development'
+                ? $error['message'] . ' in ' . $error['file'] . ':' . $error['line']
+                : null
+        ], JSON_UNESCAPED_UNICODE);
+    }
+});
 
 // CORS Headers - allow requests from your React app
 header('Access-Control-Allow-Origin: *'); // Change to your domain in production
@@ -56,9 +100,13 @@ function getDB() {
             ];
             $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
         } catch (PDOException $e) {
-            error_log("Database connection failed: " . $e->getMessage());
+            error_log("[DB] Connection failed: " . $e->getMessage() . " (host=" . DB_HOST . ", db=" . DB_NAME . ", user=" . DB_USER . ")");
             http_response_code(500);
-            echo json_encode(['error' => 'Database connection failed']);
+            $response = ['error' => 'Database connection failed'];
+            if (($_ENV['ENVIRONMENT'] ?? '') === 'development') {
+                $response['debug'] = $e->getMessage();
+            }
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
             exit();
         }
     }
