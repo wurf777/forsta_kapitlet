@@ -37,3 +37,5 @@ CREATE TABLE IF NOT EXISTS log_sessions (
     INDEX idx_session_user (user_hash),
     INDEX idx_session_started (started_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO schema_migrations (version) VALUES ('002_add_logging_tables');

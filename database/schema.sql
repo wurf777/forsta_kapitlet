@@ -1,6 +1,14 @@
 -- ============================================
 -- Bokdatabas Schema för one.com MySQL
+-- Aktuell fullständig struktur (alla migrationer inbakade)
+-- Senast uppdaterad: migration 002
 -- ============================================
+
+-- Migration register
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    version VARCHAR(255) NOT NULL PRIMARY KEY,
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Böcker (huvudtabell)
 CREATE TABLE IF NOT EXISTS books (
@@ -17,19 +25,19 @@ CREATE TABLE IF NOT EXISTS books (
     description TEXT,
     cover_url VARCHAR(1000),
     cover_thumbnail_url VARCHAR(1000),
-    
+
     -- AI-genererade fält
     ai_vibe VARCHAR(255),
     ai_tempo VARCHAR(50),
     ai_themes JSON,
     ai_summary TEXT,
-    
+
     -- Metadata
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     source VARCHAR(50) DEFAULT 'google_books',
     data_quality_score INT DEFAULT 0,
-    
+
     INDEX idx_title (title(100)),
     INDEX idx_isbn13 (isbn_13),
     INDEX idx_isbn10 (isbn_10),
@@ -46,7 +54,7 @@ CREATE TABLE IF NOT EXISTS authors (
     bio TEXT,
     image_url VARCHAR(1000),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
+
     INDEX idx_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -58,7 +66,7 @@ CREATE TABLE IF NOT EXISTS book_authors (
     PRIMARY KEY (book_id, author_id),
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
     FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE,
-    
+
     INDEX idx_book (book_id),
     INDEX idx_author (author_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -69,7 +77,7 @@ CREATE TABLE IF NOT EXISTS genres (
     name VARCHAR(100) NOT NULL UNIQUE,
     parent_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
+
     FOREIGN KEY (parent_id) REFERENCES genres(id) ON DELETE SET NULL,
     INDEX idx_name (name),
     INDEX idx_parent (parent_id)
@@ -82,24 +90,25 @@ CREATE TABLE IF NOT EXISTS book_genres (
     PRIMARY KEY (book_id, genre_id),
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
     FOREIGN KEY (genre_id) REFERENCES genres(id) ON DELETE CASCADE,
-    
+
     INDEX idx_book (book_id),
     INDEX idx_genre (genre_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Användare
+-- Användare (inkl. is_admin från migration 001)
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     name VARCHAR(255),
+    is_admin TINYINT(1) NOT NULL DEFAULT 0,
     verification_token VARCHAR(64),
     verified_at TIMESTAMP NULL,
     reset_token VARCHAR(64),
     reset_token_expires TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
+
     INDEX idx_email (email),
     INDEX idx_verification (verification_token),
     INDEX idx_reset (reset_token)
@@ -118,11 +127,11 @@ CREATE TABLE IF NOT EXISTS user_books (
     finished_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
+
     UNIQUE KEY unique_user_book (user_id, book_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
-    
+
     INDEX idx_user (user_id),
     INDEX idx_book (book_id),
     INDEX idx_status (status),
@@ -138,7 +147,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     blocked_genres JSON,
     preferences JSON,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
+
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -150,10 +159,46 @@ CREATE TABLE IF NOT EXISTS data_sources (
     source_id VARCHAR(255),
     last_synced TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     raw_data JSON,
-    
+
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
     INDEX idx_book (book_id),
     INDEX idx_source (source_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Logg-tabeller (migration 002)
+CREATE TABLE IF NOT EXISTS log_events (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_hash VARCHAR(64) NOT NULL,
+    session_id VARCHAR(64) NOT NULL,
+    event_category ENUM('auth', 'books', 'search', 'bibbi', 'profile') NOT NULL,
+    event_action VARCHAR(100) NOT NULL,
+    event_data JSON,
+    book_id INT DEFAULT NULL,
+    search_query VARCHAR(500) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_user_hash (user_hash),
+    INDEX idx_session (session_id),
+    INDEX idx_category (event_category),
+    INDEX idx_action (event_action),
+    INDEX idx_created_at (created_at),
+    INDEX idx_book_id (book_id),
+    INDEX idx_category_created (event_category, created_at),
+    INDEX idx_user_created (user_hash, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS log_sessions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    session_id VARCHAR(64) NOT NULL UNIQUE,
+    user_hash VARCHAR(64) NOT NULL,
+    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_active_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    had_bibbi_chat BOOLEAN DEFAULT FALSE,
+    had_bibbi_recommendations BOOLEAN DEFAULT FALSE,
+    had_book_add BOOLEAN DEFAULT FALSE,
+
+    INDEX idx_session_user (user_hash),
+    INDEX idx_session_started (started_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Seed några vanliga genrer
@@ -172,3 +217,9 @@ INSERT IGNORE INTO genres (name) VALUES
     ('Poesi'),
     ('Drama'),
     ('Äventyr');
+
+-- Registrera alla migrationer som applicerade
+INSERT IGNORE INTO schema_migrations (version) VALUES
+    ('000_initial_schema'),
+    ('001_add_is_admin_to_users'),
+    ('002_add_logging_tables');
