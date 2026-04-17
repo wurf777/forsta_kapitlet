@@ -6,11 +6,18 @@
 
 require_once '../config.php';
 require_once '../helpers/analytics.php';
+require_once '../helpers/rate_limit.php';
 
 $data = getJsonInput();
 
 if (!$data) {
     sendError('Invalid JSON data');
+}
+
+// Rate limit: 5 registrations per IP per hour
+$ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+if (!checkRateLimit($ip, 'register', 5, 3600)) {
+    sendError('Too many registration attempts. Please try again later.', 429);
 }
 
 // Validate input

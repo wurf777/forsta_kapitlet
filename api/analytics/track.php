@@ -27,11 +27,6 @@ if (preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
     $token = $matches[1];
 }
 
-// Fallback: check body for token (sendBeacon)
-if (!$token && !empty($data['token'])) {
-    $token = $data['token'];
-}
-
 if (!$token) {
     sendError('Unauthorized', 401);
 }

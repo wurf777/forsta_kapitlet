@@ -1,5 +1,6 @@
 import { getLibrary } from './storage';
 import { track } from './analytics';
+import { api } from './api';
 
 // Preference maps (exported for use in PreferenceChip)
 export const PREFERENCE_MAPS = {
@@ -14,50 +15,14 @@ export const PREFERENCE_LABELS = {
     length: { name: "Längd", left: "Kort", right: "Episkt" }
 };
 
-// Initialize Gemini API
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-let genAI = null;
-let genAILoadPromise = null;
-
-const loadGenAI = async () => {
-    if (!API_KEY) return null;
-    if (genAI) return genAI;
-    if (!genAILoadPromise) {
-        genAILoadPromise = import('@google/generative-ai')
-            .then(({ GoogleGenerativeAI }) => {
-                genAI = new GoogleGenerativeAI(API_KEY);
-                return genAI;
-            })
-            .catch((error) => {
-                genAILoadPromise = null;
-                throw error;
-            });
-    }
-    return genAILoadPromise;
-};
-
 // Storage key for daily tip
 const DAILY_TIP_KEY = 'forsta_kapitlet_daily_tip';
 
 /**
  * Send a message to Bibbi and get a response
- * @param {string} message - User's message
- * @param {Array} history - Conversation history
- * @returns {Promise<string>} - Bibbi's response
  */
 export const sendMessageToBibbi = async (message, history, modes = null, profile = null, context = null) => {
-    if (!API_KEY) {
-        return "Hoppsan! Jag behöver en API-nyckel för att fungera. Lägg till din Gemini API-nyckel i .env filen (VITE_GEMINI_API_KEY).";
-    }
-
     try {
-        const client = await loadGenAI();
-        if (!client) {
-            return "Hoppsan! Jag behöver en API-nyckel för att fungera. Lägg till din Gemini API-nyckel i .env filen (VITE_GEMINI_API_KEY).";
-        }
-
-        const model = client.getGenerativeModel({ model: "gemini-2.5-flash" });
-
         // Get user's book library for context
         const userBooks = await getLibrary();
         const bookContext = userBooks.length > 0
@@ -85,7 +50,6 @@ export const sendMessageToBibbi = async (message, history, modes = null, profile
         let modesContext = "";
         if (modes) {
             const vibes = modes.vibes?.length > 0 ? `\n- Önskad känsla/vibe: ${modes.vibes.join(', ')}` : "";
-
             modesContext = `\n\nAKTUELLT LÄSLÄGE (Vad användaren vill ha JUST NU):
 - Längd: ${PREFERENCE_MAPS.length[modes.length] || "Lagom"}
 - Stämning: ${PREFERENCE_MAPS.mood[modes.mood] || "Neutralt"}
@@ -107,15 +71,6 @@ export const sendMessageToBibbi = async (message, history, modes = null, profile
 Användaren ställer frågor om DENNA bok om inget annat anges.`;
         }
 
-        // Build conversation history
-        const chatHistory = history
-            .filter(msg => msg.text && msg.sender !== 'system') // Filter out system messages and empty text
-            .map(msg => ({
-                role: msg.sender === 'user' ? 'user' : 'model',
-                parts: [{ text: msg.text }]
-            }));
-
-        // System prompt for Bibbi's personality
         const systemPrompt = `Du är Bibbi, en entusiastisk och kunnig bokexpert som älskar att hjälpa människor hitta sin nästa favoritbok.
 
 PERSONLIGHET:
@@ -146,56 +101,41 @@ INTERAKTIVA PREFERENS-CHIP:
 
 ${bookContext}${profileContext}${modesContext}${specificContext}`;
 
-        const chat = model.startChat({
-            history: [
-                {
-                    role: 'user',
-                    parts: [{ text: systemPrompt }]
-                },
-                {
-                    role: 'model',
-                    parts: [{ text: 'Hej! Jag är Bibbi, din personliga bokguide. Jag älskar att prata om böcker och hjälpa dig hitta din nästa favoritläsning. Vad är du sugen på att läsa idag?' }]
-                },
-                ...chatHistory
-            ],
-            generationConfig: {
-                temperature: 0.9,
-                topP: 0.95,
-                topK: 40,
-                maxOutputTokens: 2048,
-            }
+        // Build conversation history for the API (filter system messages, keep user/model turns)
+        const chatHistory = history
+            .filter(msg => msg.text && msg.sender !== 'system')
+            .map(msg => ({
+                role: msg.sender === 'user' ? 'user' : 'model',
+                parts: [{ text: msg.text }]
+            }));
+
+        // Append current message
+        const contents = [
+            ...chatHistory,
+            { role: 'user', parts: [{ text: message }] }
+        ];
+
+        const response = await api.ai.generate(contents, systemPrompt, {
+            temperature: 0.9,
+            topP: 0.95,
+            topK: 40,
+            maxOutputTokens: 2048,
         });
 
-        const result = await chat.sendMessage(message);
-        const response = result.response;
         track('bibbi', 'chat_message', { message_count_in_session: history.length });
-        return response.text();
+        return response.text;
 
     } catch (error) {
-        console.error('Error communicating with Gemini:', error);
+        console.error('Error communicating with Bibbi:', error);
         return "Oj, något gick fel när jag försökte svara. Kan du försöka igen?";
     }
 };
 
 /**
  * Get 10 book recommendations based on user's library
- * @param {Array} userBooks - User's book library (optional, will fetch from storage if not provided)
- * @returns {Promise<Array>} - Array of book recommendations with title, author, and reason
  */
 export const getBookRecommendations = async (userBooks = null, profile = null) => {
-    if (!API_KEY) {
-        throw new Error("API-nyckel saknas. Lägg till VITE_GEMINI_API_KEY i .env filen.");
-    }
-
     try {
-        const client = await loadGenAI();
-        if (!client) {
-            throw new Error("API-nyckel saknas. Lägg till VITE_GEMINI_API_KEY i .env filen.");
-        }
-
-        const model = client.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-        // Get user's book library
         const library = userBooks || await getLibrary();
 
         if (library.length === 0) {
@@ -206,7 +146,6 @@ export const getBookRecommendations = async (userBooks = null, profile = null) =
             `- "${book.title}" av ${book.authors?.join(', ') || 'Okänd författare'} (${book.categories?.join(', ') || 'Ingen genre'})`
         ).join('\n');
 
-        // Build profile context
         let profileContext = "";
         if (profile) {
             const favAuthors = profile.favoriteAuthors?.length > 0 ? `\n- Favoritförfattare: ${profile.favoriteAuthors.join(', ')}` : "";
@@ -242,20 +181,22 @@ Svara ENDAST med en JSON-array i följande format (ingen annan text):
     "author": "Författarnamn",
     "reason": "Kort förklaring (1-2 meningar) varför denna bok passar användarens smak",
     "vibe": "En kort sträng som beskriver känslan (t.ex. Mysig, Mörk & Tung, Spännande)",
-    "tempo": 3, // Ett heltal 1-5 (1=Långsamt, 5=Actionfyllt)
-    "themes": ["Tema 1", "Tema 2", "Tema 3"], // 3-5 nyckelteman på svenska
+    "tempo": 3,
+    "themes": ["Tema 1", "Tema 2", "Tema 3"],
     "genre_specifics": "Specifik genre (t.ex. Psykologisk thriller)"
   }
 ]`;
 
-        const result = await model.generateContent(prompt);
-        const response = result.response;
-        const text = response.text();
+        const response = await api.ai.generate(
+            [{ role: 'user', parts: [{ text: prompt }] }],
+            null,
+            { temperature: 0.8, maxOutputTokens: 2048 }
+        );
 
-        // Parse JSON response
+        const text = response.text;
         const jsonMatch = text.match(/\[[\s\S]*\]/);
         if (!jsonMatch) {
-            throw new Error("Kunde inte tolka svaret från Gemini");
+            throw new Error("Kunde inte tolka svaret från AI");
         }
 
         const recommendations = JSON.parse(jsonMatch[0]);
@@ -270,26 +211,17 @@ Svara ENDAST med en JSON-array i följande format (ingen annan text):
 
 /**
  * Analyze chat history for user preferences
- * @param {Array} history - Chat history
- * @param {Object} profile - User's current profile (optional)
- * @returns {Promise<Object|null>} - Suggested profile updates or null
  */
 export const analyzeChatForPreferences = async (history, profile = null) => {
-    if (!API_KEY || history.length < 2) return null;
+    if (history.length < 2) return null;
 
     try {
-        const client = await loadGenAI();
-        if (!client) return null;
-
-        const model = client.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-        // Only look at the last few messages to save context and focus on recent topics
+        // Only look at the last few messages
         const recentMessages = history
-            .filter(msg => msg.text && msg.sender !== 'system') // Filter out system messages
+            .filter(msg => msg.text && msg.sender !== 'system')
             .slice(-4)
-            .map(msg =>
-                `${msg.sender === 'user' ? 'Användare' : 'Bibbi'}: ${msg.text}`
-            ).join('\n');
+            .map(msg => `${msg.sender === 'user' ? 'Användare' : 'Bibbi'}: ${msg.text}`)
+            .join('\n');
 
         let profileContext = "";
         if (profile) {
@@ -316,34 +248,29 @@ INSTRUKTIONER:
 
 Returnera en JSON med följande struktur (annars returnera null):
 {
-  "favoriteAuthors": ["Namn 1"], // Lägg till i favoriter
-  "favoriteGenres": ["Genre 1"], // Lägg till i favoriter
-  "removeFromFavorites": {
-      "authors": ["Namn 3"], // TA BORT från favoriter
-      "genres": ["Genre 3"] // TA BORT från favoriter
-  },
-  "blocklist": {
-    "authors": ["Namn 2"], // Blockera
-    "genres": ["Genre 2"] // Blockera
-  },
-  "removeFromBlocklist": {
-      "authors": ["Namn 4"], // TA BORT från blocklistan
-      "genres": ["Genre 4"] // TA BORT från blocklistan
-  },
-  "reason": "Kort förklaring på svenska varför detta föreslås. VIKTIGT: Tilltala användaren med 'du' (t.ex. 'Eftersom du inte längre verkar gilla...')."
+  "favoriteAuthors": ["Namn 1"],
+  "favoriteGenres": ["Genre 1"],
+  "removeFromFavorites": { "authors": ["Namn 3"], "genres": ["Genre 3"] },
+  "blocklist": { "authors": ["Namn 2"], "genres": ["Genre 2"] },
+  "removeFromBlocklist": { "authors": ["Namn 4"], "genres": ["Genre 4"] },
+  "reason": "Kort förklaring på svenska varför detta föreslås. Tilltala användaren med 'du'."
 }
 
 Svara ENDAST med JSON.`;
 
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
+        const response = await api.ai.generate(
+            [{ role: 'user', parts: [{ text: prompt }] }],
+            null,
+            { temperature: 0.3, maxOutputTokens: 512 }
+        );
 
+        const text = response.text;
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (!jsonMatch) return null;
 
         const suggestions = JSON.parse(jsonMatch[0]);
 
-        // Filter out suggestions that are already in the profile to avoid redundancy
+        // Filter out suggestions already in the profile
         if (profile) {
             if (suggestions.favoriteAuthors) {
                 suggestions.favoriteAuthors = suggestions.favoriteAuthors.filter(a => !profile.favoriteAuthors?.includes(a));
@@ -359,7 +286,6 @@ Svara ENDAST med JSON.`;
             }
         }
 
-        // Filter out empty suggestions
         const hasUpdates =
             suggestions.favoriteAuthors?.length > 0 ||
             suggestions.favoriteGenres?.length > 0 ||
@@ -380,8 +306,6 @@ Svara ENDAST med JSON.`;
 
 /**
  * Get a daily book tip from Bibbi (cached for 24 hours)
- * @param {Object} profile - User's profile (optional)
- * @returns {Promise<Object|null>} - A single book recommendation or null
  */
 export const getDailyTip = async (profile = null) => {
     // Check for cached tip
@@ -398,15 +322,7 @@ export const getDailyTip = async (profile = null) => {
         }
     }
 
-    if (!API_KEY) {
-        return null;
-    }
-
     try {
-        const client = await loadGenAI();
-        if (!client) return null;
-
-        const model = client.getGenerativeModel({ model: "gemini-2.5-flash" });
         const library = await getLibrary();
 
         if (library.length === 0) {
@@ -445,9 +361,13 @@ Svara ENDAST med JSON:
   "reason": "Kort motivering varför denna bok passar"
 }`;
 
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
+        const response = await api.ai.generate(
+            [{ role: 'user', parts: [{ text: prompt }] }],
+            null,
+            { temperature: 0.9, maxOutputTokens: 256 }
+        );
 
+        const text = response.text;
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (!jsonMatch) return null;
 
@@ -470,14 +390,6 @@ Svara ENDAST med JSON:
 
 /**
  * Send a preference change reaction to Bibbi
- * @param {string} type - Preference type (tempo, mood, length)
- * @param {number} oldValue - Previous value
- * @param {number} newValue - New value
- * @param {Array} history - Conversation history
- * @param {Object} modes - Updated modes
- * @param {Object} profile - User profile
- * @param {Object} context - Current context
- * @returns {Promise<string>} - Bibbi's reaction
  */
 export const sendPreferenceReaction = async (type, oldValue, newValue, history, modes, profile, context) => {
     const typeName = PREFERENCE_LABELS[type]?.name || type;

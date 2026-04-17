@@ -5,6 +5,7 @@
  */
 
 require_once '../config.php';
+require_once '../helpers/rate_limit.php';
 
 $data = getJsonInput();
 
@@ -17,6 +18,13 @@ $action = $data['action'] ?? 'request'; // 'request' or 'reset'
 if ($action === 'request') {
     // Request password reset
     $email = sanitize($data['email'] ?? '');
+
+    // Rate limit: 3 requests per IP per hour
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    if (!checkRateLimit($ip, 'reset', 3, 3600)) {
+        // Still return success to avoid leaking whether an account exists
+        sendResponse(['success' => true, 'message' => 'If an account exists with this email, a password reset link has been sent.']);
+    }
     
     if (empty($email) || !validateEmail($email)) {
         sendError('Valid email is required');
@@ -38,23 +46,24 @@ if ($action === 'request') {
             ]);
         }
         
-        // Generate reset token
+        // Generate reset token — store only the hash in DB, send raw token to user
         $resetToken = generateToken();
+        $tokenHash = hash('sha256', $resetToken);
         $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
-        
-        // Save token
+
+        // Save hashed token
         $stmt = $db->prepare("
-            UPDATE users 
-            SET reset_token = :token, reset_token_expires = :expires 
+            UPDATE users
+            SET reset_token = :token, reset_token_expires = :expires
             WHERE id = :id
         ");
         $stmt->execute([
-            'token' => $resetToken,
+            'token' => $tokenHash,
             'expires' => $expiresAt,
             'id' => $user['id']
         ]);
-        
-        // Send reset email
+
+        // Send reset email with raw (unhashed) token
         $resetLink = SITE_URL . "/reset-password?token=" . $resetToken;
         $subject = "Återställ ditt lösenord - Första Kapitlet";
         $message = "
@@ -94,26 +103,27 @@ if ($action === 'request') {
     // Reset password with token
     $token = $data['token'] ?? '';
     $newPassword = $data['password'] ?? '';
-    
+
     if (empty($token)) {
         sendError('Reset token is required');
     }
-    
+
     if (empty($newPassword) || strlen($newPassword) < 8) {
         sendError('Password must be at least 8 characters');
     }
-    
+
     $db = getDB();
-    
+
     try {
-        // Verify token
+        // Hash the incoming token and compare against stored hash
+        $tokenHash = hash('sha256', $token);
         $stmt = $db->prepare("
-            SELECT id FROM users 
-            WHERE reset_token = :token 
+            SELECT id FROM users
+            WHERE reset_token = :token
             AND reset_token_expires > NOW()
             LIMIT 1
         ");
-        $stmt->execute(['token' => $token]);
+        $stmt->execute(['token' => $tokenHash]);
         $user = $stmt->fetch();
         
         if (!$user) {

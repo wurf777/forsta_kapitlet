@@ -189,7 +189,13 @@ const DEFAULT_PROFILE = {
 
 export const getUserProfile = () => {
     const stored = localStorage.getItem(PROFILE_KEY);
-    return stored ? { ...DEFAULT_PROFILE, ...JSON.parse(stored) } : DEFAULT_PROFILE;
+    if (!stored) return DEFAULT_PROFILE;
+    try {
+        return { ...DEFAULT_PROFILE, ...JSON.parse(stored) };
+    } catch {
+        localStorage.removeItem(PROFILE_KEY);
+        return DEFAULT_PROFILE;
+    }
 };
 
 /**

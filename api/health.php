@@ -1,45 +1,59 @@
 <?php
 /**
- * Health check / diagnostics endpoint
+ * Health check endpoint
  * GET /api/health.php
  *
- * DELETE THIS FILE or restrict access in production once debugging is done.
+ * Returns verbose diagnostics only in development.
+ * In production returns a minimal {healthy: true/false}.
  */
 
 header('Content-Type: application/json; charset=utf-8');
 
-$checks = [
-    'php_version' => phpversion(),
-    'timestamp' => date('c'),
-    'env_file' => file_exists(__DIR__ . '/.env'),
-    'env_readable' => is_readable(__DIR__ . '/.env'),
-    'extensions' => [
-        'pdo' => extension_loaded('pdo'),
-        'pdo_mysql' => extension_loaded('pdo_mysql'),
-        'mbstring' => extension_loaded('mbstring'),
-        'json' => extension_loaded('json'),
-    ],
-    'db' => null,
-    'error_log_writable' => is_writable(ini_get('error_log') ?: sys_get_temp_dir()),
-];
-
-// Test DB connection
-try {
-    require_once __DIR__ . '/config.php';
-    $pdo = getDB();
-    $stmt = $pdo->query("SELECT 1");
-    $checks['db'] = ['status' => 'ok', 'host' => DB_HOST, 'name' => DB_NAME];
-} catch (Throwable $e) {
-    $checks['db'] = ['status' => 'error', 'message' => $e->getMessage()];
+// Load .env to determine environment
+if (file_exists(__DIR__ . '/.env')) {
+    $env = parse_ini_file(__DIR__ . '/.env');
+    foreach ($env as $key => $value) {
+        $_ENV[$key] = $value;
+    }
 }
 
-$allOk = $checks['env_file']
-    && $checks['extensions']['pdo_mysql']
-    && ($checks['db']['status'] ?? '') === 'ok';
+$isDevelopment = ($_ENV['ENVIRONMENT'] ?? 'production') === 'development';
+
+require_once __DIR__ . '/config.php';
+
+// Test DB connection
+$dbOk = false;
+$dbError = null;
+try {
+    $pdo = getDB();
+    $pdo->query("SELECT 1");
+    $dbOk = true;
+} catch (Throwable $e) {
+    $dbError = $isDevelopment ? $e->getMessage() : 'unavailable';
+}
+
+$allOk = $dbOk
+    && extension_loaded('pdo_mysql')
+    && file_exists(__DIR__ . '/.env');
 
 http_response_code($allOk ? 200 : 500);
 
-echo json_encode([
-    'healthy' => $allOk,
-    'checks' => $checks,
-], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+if ($isDevelopment) {
+    echo json_encode([
+        'healthy' => $allOk,
+        'checks' => [
+            'php_version' => phpversion(),
+            'timestamp' => date('c'),
+            'env_file' => file_exists(__DIR__ . '/.env'),
+            'extensions' => [
+                'pdo' => extension_loaded('pdo'),
+                'pdo_mysql' => extension_loaded('pdo_mysql'),
+                'mbstring' => extension_loaded('mbstring'),
+                'json' => extension_loaded('json'),
+            ],
+            'db' => $dbOk ? ['status' => 'ok'] : ['status' => 'error', 'message' => $dbError],
+        ],
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+} else {
+    echo json_encode(['healthy' => $allOk], JSON_UNESCAPED_UNICODE);
+}

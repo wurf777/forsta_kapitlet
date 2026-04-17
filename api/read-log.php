@@ -1,17 +1,31 @@
 <?php
 /**
  * Read recent PHP error log entries.
- * DELETE THIS FILE after debugging — it exposes server internals.
+ * Only available in development environment.
  *
  * GET /api/read-log.php?key=YOUR_SECRET
  */
 
+// Load .env to check environment
+if (file_exists(__DIR__ . '/.env')) {
+    $env = parse_ini_file(__DIR__ . '/.env');
+    foreach ($env as $key => $value) {
+        $_ENV[$key] = $value;
+    }
+}
+
+// Block in production
+if (($_ENV['ENVIRONMENT'] ?? 'production') !== 'development') {
+    http_response_code(404);
+    exit;
+}
+
 header('Content-Type: text/plain; charset=utf-8');
 
-// Simple access key — change this before deploying
-$accessKey = 'forsta-debug-2026';
+// Access key from env, not hardcoded
+$accessKey = $_ENV['LOG_ACCESS_KEY'] ?? '';
 
-if (($_GET['key'] ?? '') !== $accessKey) {
+if (empty($accessKey) || ($_GET['key'] ?? '') !== $accessKey) {
     http_response_code(403);
     echo 'Forbidden';
     exit();

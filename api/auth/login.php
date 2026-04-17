@@ -6,6 +6,7 @@
 
 require_once '../config.php';
 require_once '../helpers/analytics.php';
+require_once '../helpers/rate_limit.php';
 
 $data = getJsonInput();
 
@@ -16,6 +17,12 @@ if (!$data) {
 // Validate input
 $email = sanitize($data['email'] ?? '');
 $password = $data['password'] ?? '';
+
+// Rate limit: 10 attempts per IP per 15 minutes
+$ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+if (!checkRateLimit($ip, 'login', 10, 900)) {
+    sendError('Too many login attempts. Please try again later.', 429);
+}
 
 if (empty($email) || !validateEmail($email)) {
     sendError('Valid email is required');

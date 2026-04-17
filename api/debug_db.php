@@ -1,6 +1,9 @@
 <?php
-// api/debug_db.php
-// Visit this file in your browser: https://silvervidh.se/forsta-kapitlet/api/debug_db.php
+// Only available in development
+if (($_ENV['ENVIRONMENT'] ?? 'production') !== 'development') {
+    http_response_code(404);
+    exit;
+}
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -34,14 +37,14 @@ try {
     $dsn = "mysql:host=" . ($env['DB_HOST'] ?? '') . ";dbname=" . ($env['DB_NAME'] ?? '') . ";charset=utf8mb4";
     $pdo = new PDO($dsn, $env['DB_USER'] ?? '', $env['DB_PASS'] ?? '');
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
+
     echo "<h2 style='color:green'>✅ SUCCESS! Connected to database.</h2>";
     echo "<p>Server info: " . $pdo->getAttribute(PDO::ATTR_SERVER_INFO) . "</p>";
-    
+
 } catch (PDOException $e) {
     echo "<h2 style='color:red'>❌ CONNECTION FAILED</h2>";
     echo "<div style='background:#fee; padding:20px; border:1px solid red; border-radius:5px;'>";
     echo "<strong>Error Message:</strong><br>";
-    echo $e->getMessage();
+    echo htmlspecialchars($e->getMessage());
     echo "</div>";
 }

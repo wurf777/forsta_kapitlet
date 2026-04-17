@@ -51,8 +51,19 @@ register_shutdown_function(function () {
     }
 });
 
-// CORS Headers - allow requests from your React app
-header('Access-Control-Allow-Origin: *'); // Change to your domain in production
+// Load environment variables (create this file based on .env.example)
+if (file_exists(__DIR__ . '/.env')) {
+    $env = parse_ini_file(__DIR__ . '/.env');
+    foreach ($env as $key => $value) {
+        $_ENV[$key] = $value;
+    }
+}
+
+// CORS Headers - restrict to specific origin in production
+$allowedOrigin = ($_ENV['ENVIRONMENT'] ?? 'production') === 'development'
+    ? '*'
+    : ($_ENV['CORS_ORIGIN'] ?? 'https://silvervidh.se');
+header("Access-Control-Allow-Origin: $allowedOrigin");
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Session-ID');
 header('Content-Type: application/json; charset=utf-8');
@@ -61,14 +72,6 @@ header('Content-Type: application/json; charset=utf-8');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
-}
-
-// Load environment variables (create this file based on .env.example)
-if (file_exists(__DIR__ . '/.env')) {
-    $env = parse_ini_file(__DIR__ . '/.env');
-    foreach ($env as $key => $value) {
-        $_ENV[$key] = $value;
-    }
 }
 
 // Database configuration

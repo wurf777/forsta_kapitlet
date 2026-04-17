@@ -218,8 +218,18 @@ INSERT IGNORE INTO genres (name) VALUES
     ('Drama'),
     ('Äventyr');
 
+-- Rate limits (migration 003)
+CREATE TABLE IF NOT EXISTS rate_limits (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    identifier VARCHAR(255) NOT NULL COMMENT 'IP address or email',
+    action     VARCHAR(50)  NOT NULL COMMENT 'login | register | reset',
+    created_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_rate_lookup (identifier, action, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Registrera alla migrationer som applicerade
 INSERT IGNORE INTO schema_migrations (version) VALUES
     ('000_initial_schema'),
     ('001_add_is_admin_to_users'),
-    ('002_add_logging_tables');
+    ('002_add_logging_tables'),
+    ('003_add_rate_limits_and_analytics_indexes');

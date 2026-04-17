@@ -163,10 +163,15 @@ const ChatInterface = ({ className, onClose }) => {
                         data: suggestion
                     }]);
                 }
-            });
+            }).catch(err => console.error('Preference analysis failed:', err));
 
         } catch (error) {
             console.error("Error talking to Bibbi:", error);
+            setMessages(prev => [...prev, {
+                id: Date.now() + 1,
+                sender: 'bibbi',
+                text: 'Oj, något gick fel. Kan du försöka igen?'
+            }]);
         } finally {
             setIsTyping(false);
         }

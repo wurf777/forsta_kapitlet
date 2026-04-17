@@ -30,3 +30,5 @@ api/.env.one.co
 .claude/
 feedback/*.csv
 reproduction_output.txt
+api/.env.docker
+.env.docker

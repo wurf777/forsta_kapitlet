@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, Plus, Loader2 } from 'lucide-react';
 import { searchBooks } from '../services/googleBooks';
 import { addToLibrary } from '../services/storage';
@@ -11,6 +11,7 @@ const BookSearch = ({ onBookAdded, initialQuery = '' }) => {
     const [results, setResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [showResults, setShowResults] = useState(false);
+    const searchIdRef = useRef(0);
 
     useEffect(() => {
         if (!query.trim()) {
@@ -19,13 +20,24 @@ const BookSearch = ({ onBookAdded, initialQuery = '' }) => {
             return;
         }
 
+        const currentId = ++searchIdRef.current;
+
         const timeoutId = setTimeout(async () => {
             setIsSearching(true);
-            const books = await searchBooks(query);
-            setResults(books);
-            setShowResults(true);
-            setIsSearching(false);
-        }, 500); // Debounce 500ms
+            try {
+                const books = await searchBooks(query);
+                if (searchIdRef.current === currentId) {
+                    setResults(books);
+                    setShowResults(true);
+                }
+            } catch (err) {
+                console.error('Search error:', err);
+            } finally {
+                if (searchIdRef.current === currentId) {
+                    setIsSearching(false);
+                }
+            }
+        }, 500);
 
         return () => clearTimeout(timeoutId);
     }, [query]);

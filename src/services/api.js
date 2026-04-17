@@ -193,6 +193,19 @@ export const api = {
         },
     },
 
+    // AI proxy (keeps Gemini API key server-side)
+    ai: {
+        generate: async (contents, systemInstruction = null, generationConfig = null) => {
+            const body = { contents };
+            if (systemInstruction) body.system_instruction = systemInstruction;
+            if (generationConfig)  body.generation_config  = generationConfig;
+            return apiFetch('/ai/proxy.php', {
+                method: 'POST',
+                body: JSON.stringify(body),
+            });
+        },
+    },
+
     // Admin user management
     admin: {
         listUsers: async (search = '', limit = 50, offset = 0) => {

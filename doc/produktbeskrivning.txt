@@ -1,0 +1,103 @@
+FÖRSTA KAPITLET — Produktbeskrivning
+=====================================
+
+Första Kapitlet är en webbapp för bokälskare som vill hålla koll på sitt läsande och få personliga bokrekommendationer från en AI-driven bokguide vid namn Bibbi.
+
+
+MÅLGRUPP
+--------
+Bokälskare som vill ha en digital bokhylla med personlig touch. Användare som vill ha smartare boktips än "andra som köpte den här boken köpte också...".
+
+
+KÄRNFUNKTIONER
+--------------
+
+1. Digitalt bibliotek (Mina Böcker)
+   - Sök och lägg till böcker via Google Books API och lokal databas
+   - Organisera böcker med status: "Vill läsa", "Läser" och "Läst"
+   - Spåra läsframsteg (sidantal/procent)
+   - Sätt betyg (stjärnor) och skriv personliga anteckningar
+   - Hybridlagring: synkar till backend om inloggad.
+
+2. Bibbi — AI-bokguide (Google Gemini)
+   - Personlig chattbot som rekommenderar böcker baserat på användarens smak
+   - Kontextmedveten: har koll på användarens bibliotek, betyg, anteckningar och smakprofil
+   - Anpassar sig efter humör och preferenser (stämning, tempo, längd, vibe)
+   - Dagligt boktips på startsidan
+   - Blocklista: respekterar författare och genrer användaren vill undvika
+   - Går att samtala med i realtid, med rösten. (gemini-3.1-flash-live-preview)
+
+3. Smakprofil
+   - Användaren anger favoritförfattare och favoritgenrer
+   - Blocklista för författare/genrer att undvika
+   - Profildata styr Bibbis rekommendationer
+   - Export/import av all data (böcker + profil) för backup
+
+4. Boksökning (hybrid)
+   - Söker först i lokal databas, kompletterar med Google Books API om under 5 resultat
+   - Deduplicerar på ISBN och Google Books-ID, för möjlighet att redigera bokinformtionen till vår tjänst.
+   - AI-berikade metadata på böcker: vibe, tempo, teman, sammanfattning, kvalitetspoäng
+
+5. Användarhantering
+   - Registrering och inloggning.
+ 
+6. Hitta boken
+   - Från en bokdetaljsida kan användaren hitta var boken finns att köpa/låna
+   - Anpassar sig efter användarens formatpreferenser (ljudbok, e-bok, pappersbok)
+
+7. Admin
+   - Adminpanel för användarhantering
+   - Analysloggning och dashboard
+
+
+BIBBI — NÄRMARE BESKRIVNING
+----------------------------
+Bibbi är appens hjärta. Det är en AI-chattbot driven av Google Gemini (välj lämplig version) som fungerar som en personlig bokguide. Användaren kan:
+
+- Fritt chatta om böcker, be om tips, diskutera en specifik bok
+- Ställa in vad hen är sugen på just nu via "vibes"-väljaren:
+  * Längd: Kort & Snabbt <-> Långt & Episkt
+  * Stämning: Ljust & Hoppfullt <-> Mörkt & Tungt
+  * Tempo: Långsamt & Reflekterande <-> Högt & Actionfyllt
+  * Känsla: Mysigt, Spännande, Lärorikt, Sorgligt, Roligt, Romantiskt, Obehagligt, Tänkvärt, Snabbläst
+
+Bibbi tar hänsyn till hela användarens kontext: vilka böcker de har läst, vilka betyg de satt, vilka anteckningar de skrivit, deras smakprofil, blocklista, och vilken bok de tittar på just nu.
+
+Driftkostnad: Håll driftkostnaden på en rimlig nivå. Tjänsten är idag på privat/hobby-basis.
+
+
+STÄMNING & DESIGN
+------------------
+Appen ska kännas som en mysig bokhandel, inte en teknisk dashboard. Designprinciper:
+
+- Varm färgpalett: teal (#2C7A7B) som primärfärg, guld (#D69E2E) som highlight, krämiga bakgrunder
+- Typografi: Merriweather (serif) för rubriker och boktitlar, Inter (sans-serif) för brödtext
+- Personlig ton: "Välkommen tillbaka, bokvän!" snarare än kliniska formuleringar
+- Bibbi pratar som en varm, kunnig bokvän — inte som en robot
+- Tomma tillstånd ska vara inbjudande, inte avvisande
+- Footer med roterande bokcitat: "En läsare lever tusen liv före sin död", "Varje bok är en ny början", "Läsning är vila för själen"
+
+
+FLERSPRÅKIGHET
+--------------
+Appen har stöd för svenska (primärt) och engelska. All text ligger i översättningsfiler. Genrer i databasen är på svenska.
+
+
+
+SIDSTRUKTUR
+-----------
+- / (Hem) — Dashboard med lässtatistik, "Läser just nu", "Vill läsa"-kö, Bibbis dagliga tips, senaste aktivitet
+- /books (Mina Böcker) — Bokbibliotek med filtrering per status, sök och lägg till nya böcker
+- /book/:id (Bokdetalj) — Fullständig bokinfo, statushantering, betyg, anteckningar, "Hitta boken", prata med Bibbi om boken
+- /recommendations (Rekommendationer) — Bibbi-chatten med vibes-väljare
+- /profile (Profil) — Smakprofil, blocklista, data-export/import
+- /admin (Admin) — Användarhantering och analytics (skyddad route)
+- /beta-signup (Betaregistrering)
+
+
+NYCKELPRINCIPER
+---------------
+- Bibbi blir bättre ju mer man använder appen (mer data = bättre rekommendationer)
+- Sökning prioriterar lokal databas
+- All data tillhör användaren: full export/import
+- Svenskt först, men med engelska som alternativ
