@@ -19,14 +19,14 @@ En React-applikation för att hantera din personliga boklista med AI-driven reko
 ## 🏗️ Teknisk stack
 
 ### Frontend
-- React 18
+- React 19
 - Vite
 - TailwindCSS
 - React Router
 
 ### Backend
 - PHP 8+ (REST API)
-- MySQL 5.7+
+- MySQL 8.0
 - JWT-autentisering
 - one.com hosting
 
@@ -124,8 +124,6 @@ docker-compose restart api
 
 ## 🚢 Deployment till one.com
 
-Se detaljerad guide i [DEPLOYMENT.md](./DEPLOYMENT.md)
-
 ### Snabbstart:
 1. Skapa MySQL-databas på one.com
 2. Importera `database/schema.sql` via phpMyAdmin
@@ -164,7 +162,6 @@ forsta_kapitlet/
 ├── doc/                     # Dokumentation
 │   ├── databas_strategi.md # Långsiktig strategi
 │   └── prisbild.md         # Kostnadsanalys
-├── DEPLOYMENT.md           # Deployment-guide
 └── README.md              # Denna fil
 ```
 
@@ -255,19 +252,13 @@ npm run build
 npm run lint
 ```
 
-### Testa API (PowerShell)
-```powershell
-.\scripts\test-api.ps1
-.\scripts\test-auth.ps1
-```
-
 ## 🤝 Bidra
 
 Detta är ett personligt projekt, men förslag och feedback är välkomna!
 
 ## 📄 Licens
 
-Privat projekt
+MIT License — se [LICENSE](./LICENSE)
 
 ## 🙏 Tack till
 
@@ -278,7 +269,7 @@ Privat projekt
 
 ## 📞 Support
 
-För frågor eller problem, se [DEPLOYMENT.md](./DEPLOYMENT.md) för felsökning.
+För frågor eller problem, öppna ett issue på GitHub.
 
 ---
 
