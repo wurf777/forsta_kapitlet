@@ -4,6 +4,16 @@ A React application for managing your personal book library with an AI-powered r
 
 > Swedish version: [README.sv.md](./README.sv.md)
 
+## 📸 Screenshots
+
+| Home | My Books |
+|------|----------|
+| ![Home](./docs/screenshots/home.png) | ![My Books](./docs/screenshots/my-books.png) |
+
+| Bibbi Chat | Recommendations |
+|------------|-----------------|
+| ![Chat](./docs/screenshots/chat.png) | ![Recommendations](./docs/screenshots/recommendations.png) |
+
 ## 🚀 Features
 
 - **Hybrid book database**: Searches own MySQL database first, falls back to Google Books API
