@@ -193,7 +193,7 @@ export const api = {
         },
     },
 
-    // AI proxy (keeps Gemini API key server-side)
+    // AI proxy (uses user's own Gemini API key stored server-side)
     ai: {
         generate: async (contents, systemInstruction = null, generationConfig = null) => {
             const body = { contents };
@@ -202,6 +202,26 @@ export const api = {
             return apiFetch('/ai/proxy.php', {
                 method: 'POST',
                 body: JSON.stringify(body),
+            });
+        },
+    },
+
+    // Gemini API key management
+    apiKey: {
+        get: async () => {
+            return apiFetch('/user/api-key.php');
+        },
+
+        save: async (apiKey) => {
+            return apiFetch('/user/api-key.php', {
+                method: 'POST',
+                body: JSON.stringify({ apiKey }),
+            });
+        },
+
+        remove: async () => {
+            return apiFetch('/user/api-key.php', {
+                method: 'DELETE',
             });
         },
     },

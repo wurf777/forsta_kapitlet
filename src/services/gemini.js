@@ -2,6 +2,20 @@ import { getLibrary } from './storage';
 import { track } from './analytics';
 import { api } from './api';
 
+export class NoApiKeyError extends Error {
+    constructor() {
+        super('no_api_key');
+        this.name = 'NoApiKeyError';
+    }
+}
+
+function handleApiError(error) {
+    if (error?.statusCode === 402 || error?.message === 'no_api_key') {
+        throw new NoApiKeyError();
+    }
+    throw error;
+}
+
 // Preference maps (exported for use in PreferenceChip)
 export const PREFERENCE_MAPS = {
     length: { 1: "Mycket kort/snabbt", 2: "Kort", 3: "Lagom", 4: "Långt", 5: "Episkt/Tegelsten" },
@@ -126,15 +140,14 @@ ${bookContext}${profileContext}${modesContext}${specificContext}`;
         return response.text;
 
     } catch (error) {
-        console.error('Error communicating with Bibbi:', error);
-        return "Oj, något gick fel när jag försökte svara. Kan du försöka igen?";
+        handleApiError(error);
     }
 };
 
 /**
  * Get 10 book recommendations based on user's library
  */
-export const getBookRecommendations = async (userBooks = null, profile = null) => {
+export const getBookRecommendations = async (userBooks = null, profile = null, count = 3, excludeTitles = []) => {
     try {
         const library = userBooks || await getLibrary();
 
@@ -160,16 +173,20 @@ export const getBookRecommendations = async (userBooks = null, profile = null) =
             }
         }
 
-        const prompt = `Baserat på följande boklista och användarprofil, ge mig 10 nya bokrekommendationer som användaren skulle uppskatta.
+        const excludeSection = excludeTitles.length > 0
+            ? `\nEXKLUDERA dessa titlar (föreslå INTE dessa böcker):\n${excludeTitles.map(t => `- ${t}`).join('\n')}`
+            : '';
+
+        const prompt = `Baserat på följande boklista och användarprofil, ge mig ${count} nya bokrekommendationer som användaren skulle uppskatta.
 
 ANVÄNDARENS BOKLISTA:
-${bookList}${profileContext}
+${bookList}${profileContext}${excludeSection}
 
 INSTRUKTIONER:
 - Analysera genrer, författare, teman och stilar i listan
 - VIKTIGT: Respektera ALLTID användarens blocklista. Föreslå ALDRIG författare eller genrer som är blockerade.
 - Prioritera användarens favoritförfattare och genrer om angivet
-- Ge 10 OLIKA böcker som användaren inte redan har
+- Ge ${count} OLIKA böcker som användaren inte redan har
 - Variera rekommendationerna (inte bara samma genre)
 - Inkludera både klassiker och moderna böcker
 - Förklara kort VARFÖR varje bok passar baserat på användarens smak
@@ -190,22 +207,26 @@ Svara ENDAST med en JSON-array i följande format (ingen annan text):
         const response = await api.ai.generate(
             [{ role: 'user', parts: [{ text: prompt }] }],
             null,
-            { temperature: 0.8, maxOutputTokens: 2048 }
+            { temperature: 0.8, maxOutputTokens: 8192 }
         );
 
-        const text = response.text;
+        const text = response.text.replace(/```(?:json)?\s*/g, '').trim();
         const jsonMatch = text.match(/\[[\s\S]*\]/);
         if (!jsonMatch) {
             throw new Error("Kunde inte tolka svaret från AI");
         }
 
-        const recommendations = JSON.parse(jsonMatch[0]);
+        let recommendations;
+        try {
+            recommendations = JSON.parse(jsonMatch[0]);
+        } catch {
+            throw new Error("Kunde inte tolka svaret från AI");
+        }
         track('bibbi', 'get_recommendations', { recommendation_count: recommendations.length });
         return recommendations;
 
     } catch (error) {
-        console.error('Error getting book recommendations:', error);
-        throw error;
+        handleApiError(error);
     }
 };
 
@@ -264,7 +285,7 @@ Svara ENDAST med JSON.`;
             { temperature: 0.3, maxOutputTokens: 512 }
         );
 
-        const text = response.text;
+        const text = response.text.replace(/```(?:json)?\s*/g, '').trim();
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (!jsonMatch) return null;
 
@@ -367,7 +388,7 @@ Svara ENDAST med JSON:
             { temperature: 0.9, maxOutputTokens: 256 }
         );
 
-        const text = response.text;
+        const text = response.text.replace(/```(?:json)?\s*/g, '').trim();
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (!jsonMatch) return null;
 

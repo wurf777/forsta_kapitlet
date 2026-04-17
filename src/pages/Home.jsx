@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Book, Star, Sparkles, TrendingUp, BookOpen, Clock, Lightbulb, LogIn, Mail } from 'lucide-react';
+import { ArrowRight, Book, Star, Sparkles, TrendingUp, BookOpen, Clock, Lightbulb, LogIn, Key, ChevronDown, ChevronUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getLibrary, getUserProfile } from '../services/storage';
 import { getDailyTip } from '../services/gemini';
@@ -37,6 +37,11 @@ const Home = () => {
     const [tipBook, setTipBook] = useState(null);
     const [tipLoading, setTipLoading] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
+    const [authModalMode, setAuthModalMode] = useState('login');
+    const [showKeyGuide, setShowKeyGuide] = useState(false);
+
+    const openLogin = () => { setAuthModalMode('login'); setShowAuthModal(true); };
+    const openRegister = () => { setAuthModalMode('register'); setShowAuthModal(true); };
 
     const firstName = user?.name?.trim()?.split(' ')[0] || user?.email?.split('@')[0] || t('home.bookLover');
 
@@ -138,6 +143,7 @@ const Home = () => {
     if (!isAuthenticated) {
         return (
             <div className="space-y-12 md:space-y-16 fade-in-up">
+                {/* Hero */}
                 <section className="relative overflow-hidden rounded-3xl border border-warm/20 bg-gradient-to-br from-bg-card via-bg-secondary to-warm-light px-6 py-12 md:py-16 text-center shadow-lg">
                     <div className="absolute -top-16 -right-10 h-44 w-44 rounded-full bg-accent/10 blur-2xl" aria-hidden="true" />
                     <div className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-warm/20 blur-2xl" aria-hidden="true" />
@@ -149,28 +155,25 @@ const Home = () => {
                         <p className="text-lg md:text-xl text-stone-700 max-w-2xl mx-auto leading-relaxed">
                             {t('home.subtitle')}
                         </p>
-                        <p className="text-sm text-stone-600 max-w-lg mx-auto">
-                            Första kapitlet är just nu i stängd beta. Har du redan ett konto? Logga in nedan. Vill du veta mer? Kontakta oss!
-                        </p>
                         <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4 md:pt-8">
                             <button
-                                onClick={() => setShowAuthModal(true)}
+                                onClick={openRegister}
                                 className="btn btn-primary text-base md:text-lg px-6 md:px-8 py-2.5 md:py-3 inline-flex items-center justify-center gap-2"
                             >
-                                <LogIn size={20} />
-                                Logga in
+                                {t('auth.register')}
                             </button>
-                            <Link
-                                to="/contact"
+                            <button
+                                onClick={openLogin}
                                 className="btn btn-secondary text-base md:text-lg px-6 md:px-8 py-2.5 md:py-3 inline-flex items-center justify-center gap-2"
                             >
-                                <Mail size={20} />
-                                Kontakta oss
-                            </Link>
+                                <LogIn size={20} />
+                                {t('auth.login')}
+                            </button>
                         </div>
                     </div>
                 </section>
 
+                {/* Feature cards */}
                 <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 text-center max-w-5xl mx-auto px-4">
                     <div className="card p-5 md:p-6">
                         <div className="w-12 h-12 bg-accent/15 rounded-full flex items-center justify-center mx-auto mb-4 text-accent">
@@ -195,7 +198,85 @@ const Home = () => {
                     </div>
                 </section>
 
-                <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+                {/* Onboarding guide – how to get started */}
+                <section className="max-w-3xl mx-auto px-4">
+                    <h2 className="text-2xl md:text-3xl font-heading text-gray-900 text-center mb-8">
+                        {t('onboarding.howToStart')}
+                    </h2>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                        {[
+                            { icon: <Key size={26} />, title: t('onboarding.step1Title'), body: t('onboarding.step1Body'), color: 'bg-accent/10 text-accent' },
+                            { icon: <Book size={26} />, title: t('onboarding.step2Title'), body: t('onboarding.step2Body'), color: 'bg-warm/20 text-warm-dark' },
+                            { icon: <Sparkles size={26} />, title: t('onboarding.step3Title'), body: t('onboarding.step3Body'), color: 'bg-highlight/20 text-highlight' },
+                        ].map((step, i) => (
+                            <div key={i} className="card p-5 text-center">
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${step.color}`}>
+                                    {step.icon}
+                                </div>
+                                <div className="w-6 h-6 rounded-full bg-stone-200 text-stone-600 text-xs font-bold flex items-center justify-center mx-auto mb-2">{i + 1}</div>
+                                <h3 className="font-bold text-gray-900 mb-1 text-sm md:text-base">{step.title}</h3>
+                                <p className="text-stone-600 text-sm">{step.body}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Important notice box */}
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6">
+                        <div className="flex gap-3">
+                            <Key size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                                <p className="font-semibold text-amber-900 mb-1">{t('onboarding.whyNeeded')}</p>
+                                <p className="text-sm text-amber-800">{t('onboarding.whyNeededAnswer')}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Collapsible step-by-step key guide */}
+                    <div className="card p-5">
+                        <button
+                            onClick={() => setShowKeyGuide(g => !g)}
+                            className="w-full flex items-center justify-between gap-2 text-left"
+                        >
+                            <span className="font-semibold text-gray-900 flex items-center gap-2">
+                                <Key size={18} className="text-accent" />
+                                {t('onboarding.keyGuideTitle')}
+                            </span>
+                            {showKeyGuide ? <ChevronUp size={18} className="text-stone-500 flex-shrink-0" /> : <ChevronDown size={18} className="text-stone-500 flex-shrink-0" />}
+                        </button>
+
+                        {showKeyGuide && (
+                            <div className="mt-4 space-y-2 text-sm text-stone-700">
+                                <p className="text-stone-600 mb-3">{t('onboarding.keyGuideIntro')}</p>
+                                {[
+                                    t('onboarding.keyGuideStep1'),
+                                    t('onboarding.keyGuideStep2'),
+                                    t('onboarding.keyGuideStep3'),
+                                    t('onboarding.keyGuideStep4'),
+                                    t('onboarding.keyGuideStep5'),
+                                    t('onboarding.keyGuideStep6'),
+                                ].map((step, i) => (
+                                    <div key={i} className="flex gap-3 p-2 rounded-lg hover:bg-stone-50">
+                                        <span className="w-6 h-6 rounded-full bg-accent text-white text-xs font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                                        <span>{step}</span>
+                                    </div>
+                                ))}
+                                <p className="text-stone-500 italic text-xs pt-2 border-t border-stone-100">{t('onboarding.keyGuideNote')}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="text-center mt-8">
+                        <button
+                            onClick={openRegister}
+                            className="btn btn-primary text-lg px-8 py-3"
+                        >
+                            {t('auth.register')}
+                        </button>
+                    </div>
+                </section>
+
+                <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} initialMode={authModalMode} />
             </div>
         );
     }

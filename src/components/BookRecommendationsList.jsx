@@ -6,59 +6,70 @@ import { addToLibrary, getUserProfile } from '../services/storage';
 import MarkdownText from './MarkdownText';
 
 const BookRecommendationsList = () => {
-    const [recommendations, setRecommendations] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
     const [enrichedBooks, setEnrichedBooks] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [error, setError] = useState(null);
+
+    const enrichBook = async (rec) => {
+        try {
+            const googleResults = await searchBooks(`${rec.title} ${rec.author}`);
+            return {
+                ...rec,
+                googleBook: googleResults[0] || null,
+                aiMetadata: {
+                    vibe: rec.vibe,
+                    tempo: rec.tempo,
+                    themes: rec.themes,
+                    genre_specifics: rec.genre_specifics,
+                },
+            };
+        } catch {
+            return {
+                ...rec,
+                googleBook: null,
+                aiMetadata: {
+                    vibe: rec.vibe,
+                    tempo: rec.tempo,
+                    themes: rec.themes,
+                    genre_specifics: rec.genre_specifics,
+                },
+            };
+        }
+    };
 
     const handleGetRecommendations = async () => {
         setIsLoading(true);
         setError(null);
-        setRecommendations([]);
         setEnrichedBooks([]);
 
         try {
             const profile = getUserProfile();
-            const recs = await getBookRecommendations(null, profile);
-            setRecommendations(recs);
 
-            const enriched = await Promise.all(
-                recs.map(async (rec) => {
-                    try {
-                        const googleResults = await searchBooks(`${rec.title} ${rec.author}`);
-                        const bookData = googleResults[0];
+            // Phase 1: 3 books — fast, shown immediately
+            const batch1 = await getBookRecommendations(null, profile, 3, []);
+            setIsLoading(false);
 
-                        return {
-                            ...rec,
-                            googleBook: bookData || null,
-                            aiMetadata: {
-                                vibe: rec.vibe,
-                                tempo: rec.tempo,
-                                themes: rec.themes,
-                                genre_specifics: rec.genre_specifics
-                            }
-                        };
-                    } catch (err) {
-                        console.error(`Failed to fetch Google Books data for ${rec.title}:`, err);
-                        return {
-                            ...rec,
-                            googleBook: null,
-                            aiMetadata: {
-                                vibe: rec.vibe,
-                                tempo: rec.tempo,
-                                themes: rec.themes,
-                                genre_specifics: rec.genre_specifics
-                            }
-                        };
-                    }
-                })
-            );
+            for (const rec of batch1) {
+                const enriched = await enrichBook(rec);
+                setEnrichedBooks(prev => [...prev, enriched]);
+            }
 
-            setEnrichedBooks(enriched);
+            // Phase 2: 4 more books in background, excluding phase 1
+            setIsLoadingMore(true);
+            const excludeTitles = batch1.map(b => b.title);
+            const batch2 = await getBookRecommendations(null, profile, 4, excludeTitles);
+
+            for (const rec of batch2) {
+                const enriched = await enrichBook(rec);
+                setEnrichedBooks(prev => [...prev, enriched]);
+            }
+
         } catch (err) {
             setError(err.message);
-        } finally {
             setIsLoading(false);
+        } finally {
+            setIsLoadingMore(false);
         }
     };
 
@@ -68,11 +79,13 @@ const BookRecommendationsList = () => {
         if (book.googleBook) {
             bookToAdd = {
                 ...book.googleBook,
-                categories: book.aiMetadata?.genre_specifics ? [book.aiMetadata.genre_specifics, ...book.googleBook.categories] : book.googleBook.categories,
+                categories: book.aiMetadata?.genre_specifics
+                    ? [book.aiMetadata.genre_specifics, ...book.googleBook.categories]
+                    : book.googleBook.categories,
                 vibe: book.aiMetadata?.vibe,
                 tempo: book.aiMetadata?.tempo,
                 themes: book.aiMetadata?.themes,
-                recommendationReason: book.reason
+                recommendationReason: book.reason,
             };
         } else {
             bookToAdd = {
@@ -92,7 +105,7 @@ const BookRecommendationsList = () => {
                 vibe: book.aiMetadata?.vibe,
                 tempo: book.aiMetadata?.tempo,
                 themes: book.aiMetadata?.themes,
-                recommendationReason: book.reason
+                recommendationReason: book.reason,
             };
         }
 
@@ -110,7 +123,7 @@ const BookRecommendationsList = () => {
             <div className="text-center card border-warm/20 bg-gradient-to-br from-bg-card to-bg-secondary/70">
                 <button
                     onClick={handleGetRecommendations}
-                    disabled={isLoading}
+                    disabled={isLoading || isLoadingMore}
                     className="btn btn-primary px-6 py-3 text-base md:text-lg font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                 >
                     {isLoading ? (
@@ -126,7 +139,7 @@ const BookRecommendationsList = () => {
                     )}
                 </button>
                 <p className="text-sm text-stone-600 mt-3">
-                    Bibbi analyserar din boklista och hittar 10 nya böcker åt dig
+                    Bibbi analyserar din boklista och hittar 7 nya böcker åt dig
                 </p>
             </div>
 
@@ -153,7 +166,7 @@ const BookRecommendationsList = () => {
                         {enrichedBooks.map((book, index) => (
                             <div
                                 key={index}
-                                className="card p-4 border-warm/20"
+                                className="card p-4 border-warm/20 animate-fade-in"
                             >
                                 <div className="flex gap-4">
                                     {book.googleBook?.cover ? (
@@ -210,8 +223,7 @@ const BookRecommendationsList = () => {
 
                                     <button
                                         onClick={() => handleAddBook(book)}
-                                        disabled={false}
-                                        className="btn btn-secondary px-3 py-2 rounded-xl flex-shrink-0 self-start disabled:opacity-30 disabled:cursor-not-allowed"
+                                        className="btn btn-secondary px-3 py-2 rounded-xl flex-shrink-0 self-start"
                                         title="Lägg till i min lista"
                                     >
                                         <Plus size={20} />
@@ -220,10 +232,17 @@ const BookRecommendationsList = () => {
                             </div>
                         ))}
                     </div>
+
+                    {isLoadingMore && (
+                        <div className="flex items-center gap-2 text-stone-500 text-sm py-2 px-1">
+                            <Loader2 size={16} className="animate-spin text-accent" />
+                            <span>Bibbi letar efter fler böcker...</span>
+                        </div>
+                    )}
                 </div>
             )}
 
-            {!isLoading && !error && enrichedBooks.length === 0 && recommendations.length === 0 && (
+            {!isLoading && !error && enrichedBooks.length === 0 && (
                 <div className="text-center py-12 card text-stone-600">
                     <Sparkles size={48} className="mx-auto mb-3 text-warm" />
                     <p>Klicka på knappen ovan för att få personliga bokrekommendationer!</p>

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Sparkles, Check, X } from 'lucide-react';
-import { sendMessageToBibbi, analyzeChatForPreferences, sendPreferenceReaction, PREFERENCE_MAPS } from '../services/gemini';
+import { Send, User, Sparkles, Check, X, Key } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { sendMessageToBibbi, analyzeChatForPreferences, sendPreferenceReaction, PREFERENCE_MAPS, NoApiKeyError } from '../services/gemini';
 import { getUserProfile, updateUserProfile } from '../services/storage';
 import { track } from '../services/analytics';
 import { useLanguage } from '../context/LanguageContext';
@@ -167,11 +168,19 @@ const ChatInterface = ({ className, onClose }) => {
 
         } catch (error) {
             console.error("Error talking to Bibbi:", error);
-            setMessages(prev => [...prev, {
-                id: Date.now() + 1,
-                sender: 'bibbi',
-                text: 'Oj, något gick fel. Kan du försöka igen?'
-            }]);
+            if (error instanceof NoApiKeyError) {
+                setMessages(prev => [...prev, {
+                    id: Date.now() + 1,
+                    sender: 'system',
+                    type: 'no-api-key',
+                }]);
+            } else {
+                setMessages(prev => [...prev, {
+                    id: Date.now() + 1,
+                    sender: 'bibbi',
+                    text: 'Oj, något gick fel. Kan du försöka igen?'
+                }]);
+            }
         } finally {
             setIsTyping(false);
         }
@@ -212,6 +221,34 @@ const ChatInterface = ({ className, onClose }) => {
                                 <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
                                     {msg.text}
                                 </span>
+                            </div>
+                        );
+                    }
+
+                    if (msg.sender === 'system' && msg.type === 'no-api-key') {
+                        return (
+                            <div key={msg.id} className="flex justify-center my-2">
+                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 max-w-[90%] w-full shadow-sm">
+                                    <div className="flex items-start gap-3">
+                                        <div className="bg-amber-100 p-2 rounded-full text-amber-600 flex-shrink-0">
+                                            <Key size={16} />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-semibold text-amber-900 mb-1">
+                                                {t('apiKey.noKey')}
+                                            </p>
+                                            <p className="text-sm text-amber-800 mb-3">
+                                                {t('apiKey.noKeyPrompt')}
+                                            </p>
+                                            <Link
+                                                to="/profile"
+                                                className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 underline hover:text-amber-900"
+                                            >
+                                                {t('apiKey.goToProfile')} →
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         );
                     }

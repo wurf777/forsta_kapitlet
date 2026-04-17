@@ -1,7 +1,7 @@
 -- ============================================
 -- Bokdatabas Schema för one.com MySQL
 -- Aktuell fullständig struktur (alla migrationer inbakade)
--- Senast uppdaterad: migration 002
+-- Senast uppdaterad: migration 004
 -- ============================================
 
 -- Migration register
@@ -146,6 +146,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     blocked_authors JSON,
     blocked_genres JSON,
     preferences JSON,
+    gemini_api_key VARCHAR(500) NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -232,4 +233,5 @@ INSERT IGNORE INTO schema_migrations (version) VALUES
     ('000_initial_schema'),
     ('001_add_is_admin_to_users'),
     ('002_add_logging_tables'),
-    ('003_add_rate_limits_and_analytics_indexes');
+    ('003_add_rate_limits_and_analytics_indexes'),
+    ('004_add_gemini_api_key_to_user_profiles');
