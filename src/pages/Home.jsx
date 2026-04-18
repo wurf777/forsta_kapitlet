@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight, Book, Star, Sparkles, TrendingUp, BookOpen, Clock, Lightbulb, LogIn, Key, ChevronDown, ChevronUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getLibrary, getUserProfile } from '../services/storage';
-import { getDailyTip } from '../services/gemini';
+import { getDailyTip, NoApiKeyError } from '../services/gemini';
 import { searchBooks } from '../services/googleBooks';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/useAuth';
@@ -39,6 +39,7 @@ const Home = () => {
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [authModalMode, setAuthModalMode] = useState('login');
     const [showKeyGuide, setShowKeyGuide] = useState(false);
+    const [tipNoApiKey, setTipNoApiKey] = useState(false);
 
     const openLogin = () => { setAuthModalMode('login'); setShowAuthModal(true); };
     const openRegister = () => { setAuthModalMode('register'); setShowAuthModal(true); };
@@ -114,7 +115,11 @@ const Home = () => {
                             }
                         }
                     } catch (err) {
-                        console.error('Failed to load daily tip:', err);
+                        if (err instanceof NoApiKeyError) {
+                            setTipNoApiKey(true);
+                        } else {
+                            console.error('Failed to load daily tip:', err);
+                        }
                     } finally {
                         setTipLoading(false);
                     }
@@ -308,14 +313,28 @@ const Home = () => {
                 </div>
             </section>
 
-            {(dailyTip || tipLoading) && (
+            {(dailyTip || tipLoading || tipNoApiKey) && (
                 <section className="space-y-3">
                     <h2 className="text-xl font-heading flex items-center gap-2">
                         <Lightbulb size={20} className="text-warm-dark" />
                         {t('home.bibbiTip')}
                     </h2>
 
-                    {tipLoading ? (
+                    {tipNoApiKey ? (
+                        <div className="card bg-gradient-to-br from-bg-card to-warm-light border-warm/25">
+                            <div className="flex gap-3 items-start">
+                                <div className="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                                    B
+                                </div>
+                                <div>
+                                    <p className="text-sm text-stone-700">{t('recommendations.errorNoApiKey')}</p>
+                                    <Link to="/profile#api-key" className="text-accent text-sm hover:underline mt-1 inline-flex items-center gap-1">
+                                        <Key size={12} /> {t('apiKey.title')}
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    ) : tipLoading ? (
                         <div className="card bg-gradient-to-br from-bg-card to-warm-light border-warm/25 animate-pulse">
                             <div className="flex gap-4">
                                 <div className="w-16 h-24 bg-warm/25 rounded-xl flex-shrink-0" />

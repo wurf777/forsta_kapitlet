@@ -406,6 +406,9 @@ Svara ENDAST med JSON:
         return tip;
 
     } catch (error) {
+        if (error?.statusCode === 402 || error?.message === 'no_api_key') {
+            throw new NoApiKeyError();
+        }
         console.error('Error getting daily tip:', error);
         return null;
     }
