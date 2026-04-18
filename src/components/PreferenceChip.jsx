@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import { PREFERENCE_LABELS, PREFERENCE_MAPS } from '../services/gemini';
+import { useLanguage } from '../context/LanguageContext';
 
 const PreferenceChip = ({ type, label, currentValue, onConfirm }) => {
+    const { t } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
     const [sliderValue, setSliderValue] = useState(currentValue);
     const popoverRef = useRef(null);
@@ -77,13 +79,13 @@ const PreferenceChip = ({ type, label, currentValue, onConfirm }) => {
                             onClick={() => setIsOpen(false)}
                             className="flex-1 px-2 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                         >
-                            Avbryt
+                            {t('common.cancel')}
                         </button>
                         <button
                             onClick={handleSave}
                             className="flex-1 px-2 py-1.5 text-xs text-white bg-accent rounded-lg hover:bg-accent/90 transition-colors font-medium"
                         >
-                            Spara
+                            {t('common.save')}
                         </button>
                     </div>
                     {/* Arrow pointing down */}

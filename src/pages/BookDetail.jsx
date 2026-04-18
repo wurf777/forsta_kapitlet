@@ -16,11 +16,6 @@ const BookDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [book, setBook] = useState(null);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editedStatus, setEditedStatus] = useState('');
-    const [editedProgress, setEditedProgress] = useState(0);
-    const [editedRating, setEditedRating] = useState(0);
-    const [editedNotes, setEditedNotes] = useState('');
     const [profile, setProfile] = useState(null);
     const [serviceLinks, setServiceLinks] = useState([]);
     const [isFromAPI, setIsFromAPI] = useState(false);
@@ -28,6 +23,14 @@ const BookDetail = () => {
     const [adminEditData, setAdminEditData] = useState({});
     const [adminSaving, setAdminSaving] = useState(false);
     const [isCoverCleared, setIsCoverCleared] = useState(false);
+    const [hoverRating, setHoverRating] = useState(0);
+    const [showRatingFollowup, setShowRatingFollowup] = useState(false);
+    const [showNotesModal, setShowNotesModal] = useState(false);
+    const [modalNotes, setModalNotes] = useState('');
+    const [modalStatus, setModalStatus] = useState('');
+    const [modalProgress, setModalProgress] = useState(0);
+    const [modalRating, setModalRating] = useState(0);
+    const [modalHoverRating, setModalHoverRating] = useState(0);
 
     const { setBookContext, clearContext, openChat } = useBibbi();
 
@@ -50,10 +53,6 @@ const BookDetail = () => {
             if (foundBook) {
                 const normalizedBook = normalizeBookText(foundBook);
                 setBook(normalizedBook);
-                setEditedStatus(normalizedBook.status || 'Vill läsa');
-                setEditedProgress(normalizedBook.progress || 0);
-                setEditedRating(normalizedBook.rating || 0);
-                setEditedNotes(normalizedBook.notes || '');
 
                 // Set Bibbi context
                 setBookContext(normalizedBook);
@@ -75,24 +74,55 @@ const BookDetail = () => {
         return () => clearContext();
     }, [id, setBookContext, clearContext]);
 
-    const handleSave = () => {
-        updateBookStatus(id, {
-            status: editedStatus,
-            progress: editedProgress,
-            rating: editedRating,
-            notes: editedNotes
-        });
-        const updatedBook = { ...book, status: editedStatus, progress: editedProgress, rating: editedRating, notes: editedNotes };
-        setBook(updatedBook);
-        setBookContext(updatedBook); // Update Bibbi context with new data
-        setIsEditing(false);
+    useEffect(() => {
+        if (!showRatingFollowup) return;
+        const timer = setTimeout(() => setShowRatingFollowup(false), 5000);
+        return () => clearTimeout(timer);
+    }, [showRatingFollowup]);
+
+    const handleQuickRating = async (newRating) => {
+        const rating = newRating === book.rating ? 0 : newRating;
+        await updateBookStatus(id, { rating });
+        const updated = { ...book, rating };
+        setBook(updated);
+        setBookContext(updated);
+        setEditedRating(rating);
+        if (rating > 0) setShowRatingFollowup(true);
     };
 
-    const handleStatusChange = (newStatus) => {
-        setEditedStatus(newStatus);
-        if (newStatus === 'Läst') {
-            setEditedProgress(100);
-        }
+    const handleMarkAsRead = async () => {
+        await updateBookStatus(id, { status: 'Läst', progress: 100 });
+        const updated = { ...book, status: 'Läst', progress: 100 };
+        setBook(updated);
+        setBookContext(updated);
+        setEditedStatus('Läst');
+        setEditedProgress(100);
+        setShowRatingFollowup(false);
+    };
+
+    const openNotesModal = () => {
+        setModalNotes(book.notes || '');
+        setModalStatus(book.status || 'Vill läsa');
+        setModalProgress(book.progress || 0);
+        setModalRating(book.rating || 0);
+        setModalHoverRating(0);
+        setShowNotesModal(true);
+        setShowRatingFollowup(false);
+    };
+
+    const handleModalProgressChange = (value) => {
+        setModalProgress(value);
+        if (value === 100 && modalStatus !== 'Läst') setModalStatus('Läst');
+        else if (value > 0 && value < 100 && modalStatus === 'Vill läsa') setModalStatus('Läser');
+        else if (value === 0 && modalStatus === 'Läser') setModalStatus('Vill läsa');
+    };
+
+    const handleSaveNotes = async () => {
+        await updateBookStatus(id, { notes: modalNotes, status: modalStatus, progress: modalProgress, rating: modalRating });
+        const updated = { ...book, notes: modalNotes, status: modalStatus, progress: modalProgress, rating: modalRating };
+        setBook(updated);
+        setBookContext(updated);
+        setShowNotesModal(false);
     };
 
     const handleDelete = () => {
@@ -148,7 +178,7 @@ const BookDetail = () => {
             setIsAdminEditing(false);
         } catch (error) {
             console.error('Failed to update book:', error);
-            alert('Kunde inte spara bokändringarna.');
+            alert(t('bookDetail.saveError'));
         } finally {
             setAdminSaving(false);
         }
@@ -166,6 +196,7 @@ const BookDetail = () => {
     }
 
     return (
+        <>
         <div className="max-w-4xl mx-auto px-4">
             <Link to="/books" className="inline-flex items-center gap-2 text-gray-500 hover:text-accent mb-4 md:mb-6 transition-colors">
                 <ArrowLeft size={20} />
@@ -206,36 +237,36 @@ const BookDetail = () => {
                                 className="mb-4 inline-flex items-center gap-1.5 text-sm text-accent hover:text-accent/80 transition-colors"
                             >
                                 <Pencil size={14} />
-                                Redigera bokinfo
+                                {t('bookDetail.editBookInfo')}
                             </button>
                         )}
 
                         {isAdminEditing && (
                             <div className="mb-6 space-y-3 bg-amber-50 p-4 rounded-lg border border-amber-200">
-                                <h3 className="font-bold text-amber-900 mb-2">Redigera bokinfo (admin)</h3>
+                                <h3 className="font-bold text-amber-900 mb-2">{t('bookDetail.editBookInfoAdmin')}</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-700 mb-1">Titel</label>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">{t('bookDetail.titleLabel')}</label>
                                         <input type="text" value={adminEditData.title} onChange={e => setAdminEditData(d => ({ ...d, title: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-700 mb-1">Undertitel</label>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">{t('bookDetail.subtitleLabel')}</label>
                                         <input type="text" value={adminEditData.subtitle} onChange={e => setAdminEditData(d => ({ ...d, subtitle: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-700 mb-1">Sidantal</label>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">{t('bookDetail.pageCountLabel')}</label>
                                         <input type="number" value={adminEditData.page_count} onChange={e => setAdminEditData(d => ({ ...d, page_count: parseInt(e.target.value) || 0 }))} className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-700 mb-1">Utgivningsdatum</label>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">{t('bookDetail.publishedDateLabel')}</label>
                                         <input type="text" value={adminEditData.published_date} onChange={e => setAdminEditData(d => ({ ...d, published_date: e.target.value }))} placeholder="YYYY-MM-DD" className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-700 mb-1">Förlag</label>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">{t('bookDetail.publisherLabel')}</label>
                                         <input type="text" value={adminEditData.publisher} onChange={e => setAdminEditData(d => ({ ...d, publisher: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent" />
                                     </div>
                                     <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Omslags-URL</label>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">{t('bookDetail.coverUrlLabel')}</label>
                                         <div className="flex gap-2">
                                             <input
                                                 type="text"
@@ -253,31 +284,31 @@ const BookDetail = () => {
                                                     setAdminEditData(d => ({ ...d, cover_url: '' }));
                                                 }}
                                                 className="btn btn-secondary px-3"
-                                                title="Rensa omslagsbild"
+                                                title={t('bookDetail.clearCoverTitle')}
                                             >
-                                                Rensa
+                                                {t('bookDetail.clearCover')}
                                             </button>
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-700 mb-1">ISBN-13</label>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">{t('bookDetail.isbn13Label')}</label>
                                         <input type="text" value={adminEditData.isbn_13} onChange={e => setAdminEditData(d => ({ ...d, isbn_13: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-700 mb-1">ISBN-10</label>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">{t('bookDetail.isbn10Label')}</label>
                                         <input type="text" value={adminEditData.isbn_10} onChange={e => setAdminEditData(d => ({ ...d, isbn_10: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent" />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">Beskrivning</label>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1">{t('bookDetail.descriptionLabel')}</label>
                                     <textarea value={adminEditData.description} onChange={e => setAdminEditData(d => ({ ...d, description: e.target.value }))} rows="4" className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-accent resize-none" />
                                 </div>
                                 <div className="flex gap-2">
                                     <button onClick={handleAdminSave} disabled={adminSaving} className="btn btn-primary flex-1">
-                                        {adminSaving ? 'Sparar...' : 'Spara'}
+                                        {adminSaving ? t('bookDetail.saving') : t('common.save')}
                                     </button>
                                     <button onClick={() => setIsAdminEditing(false)} className="btn btn-secondary flex-1">
-                                        Avbryt
+                                        {t('common.cancel')}
                                     </button>
                                 </div>
                             </div>
@@ -294,12 +325,57 @@ const BookDetail = () => {
                                     {book.pages} {t('bookDetail.pages')}
                                 </span>
                             )}
-                            <div className="flex items-center gap-1 text-yellow-500">
-                                {[...Array(5)].map((_, i) => (
-                                    <Star key={i} size={16} fill={i < book.rating ? "currentColor" : "none"} />
+                            <div className="flex items-center gap-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                        key={star}
+                                        onClick={() => handleQuickRating(star)}
+                                        onMouseEnter={() => setHoverRating(star)}
+                                        onMouseLeave={() => setHoverRating(0)}
+                                        className="text-yellow-500 hover:scale-110 transition-transform"
+                                        title={`${star} ${star === 1 ? t('bookDetail.starSingular') : t('bookDetail.starPlural')}`}
+                                    >
+                                        <Star size={16} fill={(hoverRating || book.rating) >= star ? "currentColor" : "none"} />
+                                    </button>
                                 ))}
                             </div>
                         </div>
+
+                        {showRatingFollowup && (
+                            <div className="mb-4 p-3 bg-bg-secondary rounded-lg border border-accent/20 text-sm flex flex-col gap-2 animate-pulse-once">
+                                <p className="text-gray-500 text-xs">{t('bookDetail.ratingFollowup')}</p>
+                                <div className="flex flex-wrap gap-2">
+                                    <button
+                                        onClick={openNotesModal}
+                                        className="px-3 py-1 rounded-full border border-accent/30 hover:bg-accent/10 text-xs transition-colors"
+                                    >
+                                        {t('bookDetail.addNote')}
+                                    </button>
+                                    {book.status !== 'Läst' && (
+                                        <button
+                                            onClick={handleMarkAsRead}
+                                            className="px-3 py-1 rounded-full border border-accent/30 hover:bg-accent/10 text-xs transition-colors"
+                                        >
+                                            {t('bookDetail.markAsRead')}
+                                        </button>
+                                    )}
+                                    {book.status === 'Läser' && (
+                                        <button
+                                            onClick={openNotesModal}
+                                            className="px-3 py-1 rounded-full border border-accent/30 hover:bg-accent/10 text-xs transition-colors"
+                                        >
+                                            {t('bookDetail.updateProgress')}
+                                        </button>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => setShowRatingFollowup(false)}
+                                    className="self-end text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
 
                         <div className="mb-8">
                             <h3 className="font-bold text-gray-900 mb-2">{t('bookDetail.synopsis')}</h3>
@@ -371,68 +447,6 @@ const BookDetail = () => {
                                     {t('bookDetail.addToLibrary') || 'Lägg till i mitt bibliotek'}
                                 </button>
                             </div>
-                        ) : isEditing ? (
-                            <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-                                {/* ... existing edit form ... */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('bookDetail.status')}</label>
-                                    <select
-                                        value={editedStatus}
-                                        onChange={(e) => handleStatusChange(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:border-accent"
-                                    >
-                                        <option value="Vill läsa">{t('bookDetail.wantToRead')}</option>
-                                        <option value="Läser">{t('bookDetail.reading')}</option>
-                                        <option value="Läst">{t('bookDetail.read')}</option>
-                                    </select>
-                                </div>
-                                {/* ... rest of form ... */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('bookDetail.progress')} (%)</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        value={editedProgress}
-                                        onChange={(e) => setEditedProgress(parseInt(e.target.value) || 0)}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:border-accent"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('bookDetail.rating')}</label>
-                                    <div className="flex gap-2">
-                                        {[1, 2, 3, 4, 5].map((star) => (
-                                            <button
-                                                key={star}
-                                                onClick={() => setEditedRating(star)}
-                                                className="text-yellow-500 hover:scale-110 transition-transform"
-                                            >
-                                                <Star size={24} fill={star <= editedRating ? "currentColor" : "none"} />
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        {t('bookDetail.myNotes')}
-                                    </label>
-                                    <textarea
-                                        value={editedNotes}
-                                        onChange={(e) => setEditedNotes(e.target.value)}
-                                        placeholder={t('bookDetail.notesPlaceholder')}
-                                        rows="4"
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:border-accent resize-none"
-                                    />
-                                </div>
-                                <div className="flex gap-2">
-                                    <button onClick={handleSave} className="btn btn-primary flex-1">
-                                        {t('bookDetail.save')}
-                                    </button>
-                                    <button onClick={() => setIsEditing(false)} className="btn btn-secondary flex-1">
-                                        {t('bookDetail.cancel')}
-                                    </button>
-                                </div>
-                            </div>
                         ) : (
                             <div className="space-y-4">
                                 {book.notes && (
@@ -442,7 +456,7 @@ const BookDetail = () => {
                                     </div>
                                 )}
                                 <div className="flex flex-col sm:flex-row gap-4">
-                                    <button onClick={() => setIsEditing(true)} className="btn btn-primary flex-1">
+                                    <button onClick={openNotesModal} className="btn btn-primary flex-1">
                                         {book.notes ? t('bookDetail.updateStatusAndNotes') : t('bookDetail.updateStatus')}
                                     </button>
                                     <button onClick={openChat} className="btn btn-secondary flex-1 flex items-center justify-center gap-2">
@@ -467,6 +481,119 @@ const BookDetail = () => {
                 </div>
             </div>
         </div>
+
+        {/* Quick-edit modal */}
+        {showNotesModal && (
+            <div
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+                onClick={(e) => { if (e.target === e.currentTarget) setShowNotesModal(false); }}
+            >
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100 flex-shrink-0">
+                        <div>
+                            <h3 className="font-heading text-lg text-gray-900">{t('bookDetail.updateStatus')}</h3>
+                            <p className="text-xs text-gray-400 italic mt-0.5">"{book.title}"</p>
+                        </div>
+                        <button
+                            onClick={() => setShowNotesModal(false)}
+                            className="text-gray-400 hover:text-gray-600 transition-colors text-xl leading-none ml-4"
+                        >
+                            ✕
+                        </button>
+                    </div>
+
+                    {/* Scrollable body */}
+                    <div className="px-5 py-4 space-y-5 overflow-y-auto">
+
+                        {/* Status */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('bookDetail.status')}</label>
+                            <select
+                                value={modalStatus}
+                                onChange={(e) => {
+                                    setModalStatus(e.target.value);
+                                    if (e.target.value === 'Läst') setModalProgress(100);
+                                }}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:border-accent text-sm"
+                            >
+                                <option value="Vill läsa">{t('bookDetail.wantToRead')}</option>
+                                <option value="Läser">{t('bookDetail.reading')}</option>
+                                <option value="Läst">{t('bookDetail.read')}</option>
+                            </select>
+                        </div>
+
+                        {/* Progress slider */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                {t('bookDetail.progress')}
+                                <span className="ml-2 text-accent font-semibold">{modalProgress}%</span>
+                                {modalProgress === 100 && <span className="ml-2 text-green-600 text-xs">✓ {t('bookDetail.finishedReading')}</span>}
+                            </label>
+                            <input
+                                type="range"
+                                min="0" max="100" step="1"
+                                value={modalProgress}
+                                onChange={(e) => handleModalProgressChange(Number(e.target.value))}
+                                className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                style={{ background: `linear-gradient(to right, #2C7A7B ${modalProgress}%, #e5e7eb ${modalProgress}%)` }}
+                            />
+                            <div className="flex justify-between mt-1 text-xs text-gray-400">
+                                <span>0%</span>
+                                <input
+                                    type="number" min="0" max="100"
+                                    value={modalProgress}
+                                    onChange={(e) => handleModalProgressChange(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
+                                    className="w-14 text-center border border-gray-200 rounded px-1 py-0.5 text-xs focus:outline-none focus:border-accent"
+                                />
+                                <span>100%</span>
+                            </div>
+                        </div>
+
+                        {/* Star rating */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">{t('bookDetail.rating')}</label>
+                            <div className="flex gap-2">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                        key={star}
+                                        onClick={() => setModalRating(star === modalRating ? 0 : star)}
+                                        onMouseEnter={() => setModalHoverRating(star)}
+                                        onMouseLeave={() => setModalHoverRating(0)}
+                                        className="text-yellow-500 hover:scale-110 transition-transform"
+                                    >
+                                        <Star size={24} fill={(modalHoverRating || modalRating) >= star ? "currentColor" : "none"} />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Notes */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('bookDetail.myNotes')}</label>
+                            <textarea
+                                value={modalNotes}
+                                onChange={(e) => setModalNotes(e.target.value)}
+                                placeholder={t('bookDetail.notesPlaceholder')}
+                                rows="4"
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-accent resize-none text-sm"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex gap-3 px-5 pb-5 flex-shrink-0">
+                        <button onClick={handleSaveNotes} className="btn btn-primary flex-1">
+                            {t('bookDetail.save')}
+                        </button>
+                        <button onClick={() => setShowNotesModal(false)} className="btn btn-secondary flex-1">
+                            {t('bookDetail.cancel')}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+        </>
     );
 };
 

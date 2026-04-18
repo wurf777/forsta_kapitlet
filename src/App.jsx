@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { LanguageProvider } from './context/LanguageContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import Layout from './components/Layout';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -14,9 +14,10 @@ const Profile = lazy(() => import('./pages/Profile'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Admin = lazy(() => import('./pages/Admin'));
 
-const PageFallback = () => (
-  <div className="py-10 text-center text-gray-500">Laddar...</div>
-);
+const PageFallback = () => {
+  const { t } = useLanguage();
+  return <div className="py-10 text-center text-gray-500">{t('common.loading')}</div>;
+};
 
 function App() {
   return (

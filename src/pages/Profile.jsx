@@ -309,13 +309,13 @@ const Profile = () => {
             </div>
 
             {/* Reading Habits & Services Section */}
-            <Section title={`📚 Läsvanor & Tjänster`}>
+            <Section title={`📚 ${t('profile.readingHabitsTitle')}`}>
                 <p className="text-stone-600 mb-4 text-sm">
-                    Välj hur du föredrar att läsa/lyssna och vilka tjänster du använder. Detta hjälper Bibbi att ge bättre förslag och visar dig var du kan hitta böcker.
+                    {t('profile.readingHabitsDesc')}
                 </p>
 
                 <div className="mb-6">
-                    <h3 className="font-medium text-stone-700 mb-3">Format</h3>
+                    <h3 className="font-medium text-stone-700 mb-3">{t('profile.formatLabel')}</h3>
                     <div className="flex flex-wrap gap-3">
                         {AVAILABLE_FORMATS.map(format => (
                             <label
@@ -335,7 +335,7 @@ const Profile = () => {
                 </div>
 
                 <div>
-                    <h3 className="font-medium text-stone-700 mb-3">Tjänster</h3>
+                    <h3 className="font-medium text-stone-700 mb-3">{t('profile.servicesLabel')}</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {AVAILABLE_SERVICES.map(service => {
                             // Check if service supports any of the selected formats
@@ -383,49 +383,54 @@ const Section = ({ title, children }) => (
     </div>
 );
 
-const ListInput = ({ value, onChange, onAdd, placeholder, list, suggestions = [] }) => (
-    <div className="flex gap-2 mb-4">
-        <input
-            type="text"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && onAdd()}
-            placeholder={placeholder}
-            list={list ? `${list}-datalist` : undefined}
-            className="flex-1 p-2 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-400"
-        />
-        {list && suggestions.length > 0 && (
-            <datalist id={`${list}-datalist`}>
-                {suggestions.map((item, index) => (
-                    <option key={index} value={item} />
-                ))}
-            </datalist>
-        )}
-        <button
-            onClick={onAdd}
-            className="px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors"
-        >
-            {/* We need to pass t here or use it inside ListInput if we want to translate 'Add' */}
-            Lägg till
-        </button>
-    </div>
-);
+const ListInput = ({ value, onChange, onAdd, placeholder, list, suggestions = [] }) => {
+    const { t } = useLanguage();
+    return (
+        <div className="flex gap-2 mb-4">
+            <input
+                type="text"
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && onAdd()}
+                placeholder={placeholder}
+                list={list ? `${list}-datalist` : undefined}
+                className="flex-1 p-2 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-400"
+            />
+            {list && suggestions.length > 0 && (
+                <datalist id={`${list}-datalist`}>
+                    {suggestions.map((item, index) => (
+                        <option key={index} value={item} />
+                    ))}
+                </datalist>
+            )}
+            <button
+                onClick={onAdd}
+                className="px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors"
+            >
+                {t('profile.add')}
+            </button>
+        </div>
+    );
+};
 
-const ItemList = ({ items, onDelete }) => (
-    <div className="flex flex-wrap gap-2">
-        {items.map((item, index) => (
-            <span key={index} className="inline-flex items-center px-2.5 md:px-3 py-1 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-sm">
-                <span className="truncate max-w-[150px] md:max-w-none">{item}</span>
-                <button
-                    onClick={() => onDelete(item)}
-                    className="ml-1.5 md:ml-2 text-stone-400 hover:text-red-500 font-bold"
-                >
-                    ×
-                </button>
-            </span>
-        ))}
-        {items.length === 0 && <span className="text-stone-400 italic text-xs md:text-sm">Inga tillagda än.</span>}
-    </div>
-);
+const ItemList = ({ items, onDelete }) => {
+    const { t } = useLanguage();
+    return (
+        <div className="flex flex-wrap gap-2">
+            {items.map((item, index) => (
+                <span key={index} className="inline-flex items-center px-2.5 md:px-3 py-1 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-sm">
+                    <span className="truncate max-w-[150px] md:max-w-none">{item}</span>
+                    <button
+                        onClick={() => onDelete(item)}
+                        className="ml-1.5 md:ml-2 text-stone-400 hover:text-red-500 font-bold"
+                    >
+                        ×
+                    </button>
+                </span>
+            ))}
+            {items.length === 0 && <span className="text-stone-400 italic text-xs md:text-sm">{t('profile.noItems')}</span>}
+        </div>
+    );
+};
 
 export default Profile;

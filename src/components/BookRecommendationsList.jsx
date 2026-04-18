@@ -4,8 +4,10 @@ import { getBookRecommendations } from '../services/gemini';
 import { searchBooks } from '../services/googleBooks';
 import { addToLibrary, getUserProfile } from '../services/storage';
 import MarkdownText from './MarkdownText';
+import { useLanguage } from '../context/LanguageContext';
 
 const BookRecommendationsList = () => {
+    const { t } = useLanguage();
     const [enrichedBooks, setEnrichedBooks] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -112,9 +114,9 @@ const BookRecommendationsList = () => {
         bookToAdd._trackingSource = 'recommendation';
         const success = addToLibrary(bookToAdd);
         if (success) {
-            alert(`"${book.title}" har lagts till i din boklista!`);
+            alert(t('bookRecommendations.added').replace('{title}', book.title));
         } else {
-            alert('Boken finns redan i din lista.');
+            alert(t('bookRecommendations.alreadyExists'));
         }
     };
 
@@ -129,23 +131,23 @@ const BookRecommendationsList = () => {
                     {isLoading ? (
                         <>
                             <Loader2 size={20} className="animate-spin" />
-                            Bibbi tänker...
+                            {t('bookRecommendations.thinking')}
                         </>
                     ) : (
                         <>
                             <Sparkles size={20} />
-                            Hitta nya böcker
+                            {t('bookRecommendations.findBooks')}
                         </>
                     )}
                 </button>
                 <p className="text-sm text-stone-600 mt-3">
-                    Bibbi analyserar din boklista och hittar 7 nya böcker åt dig
+                    {t('bookRecommendations.analysisDesc')}
                 </p>
             </div>
 
             {error && (
                 <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl">
-                    <p className="font-semibold">Något gick fel</p>
+                    <p className="font-semibold">{t('bookRecommendations.errorTitle')}</p>
                     <p className="text-sm">{error}</p>
                 </div>
             )}
@@ -153,14 +155,14 @@ const BookRecommendationsList = () => {
             {isLoading && (
                 <div className="text-center py-8 card bg-bg-card">
                     <Loader2 size={40} className="animate-spin text-accent mx-auto mb-3" />
-                    <p className="text-stone-600">Bibbi letar efter perfekta böcker åt dig...</p>
+                    <p className="text-stone-600">{t('bookRecommendations.searching')}</p>
                 </div>
             )}
 
             {enrichedBooks.length > 0 && (
                 <div className="space-y-4">
                     <h3 className="font-heading text-2xl text-gray-900 mb-0">
-                        Bibbis rekommendationer
+                        {t('bookRecommendations.recommendationsTitle')}
                     </h3>
                     <div className="space-y-3">
                         {enrichedBooks.map((book, index) => (
@@ -177,7 +179,7 @@ const BookRecommendationsList = () => {
                                         />
                                     ) : (
                                         <div className="w-20 h-32 bg-stone-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                                            <span className="text-stone-400 text-xs">Ingen bild</span>
+                                            <span className="text-stone-400 text-xs">{t('bookRecommendations.noCover')}</span>
                                         </div>
                                     )}
 
@@ -224,7 +226,7 @@ const BookRecommendationsList = () => {
                                     <button
                                         onClick={() => handleAddBook(book)}
                                         className="btn btn-secondary px-3 py-2 rounded-xl flex-shrink-0 self-start"
-                                        title="Lägg till i min lista"
+                                        title={t('bookRecommendations.addToList')}
                                     >
                                         <Plus size={20} />
                                     </button>
@@ -236,7 +238,7 @@ const BookRecommendationsList = () => {
                     {isLoadingMore && (
                         <div className="flex items-center gap-2 text-stone-500 text-sm py-2 px-1">
                             <Loader2 size={16} className="animate-spin text-accent" />
-                            <span>Bibbi letar efter fler böcker...</span>
+                            <span>{t('bookRecommendations.searchingMore')}</span>
                         </div>
                     )}
                 </div>
@@ -245,7 +247,7 @@ const BookRecommendationsList = () => {
             {!isLoading && !error && enrichedBooks.length === 0 && (
                 <div className="text-center py-12 card text-stone-600">
                     <Sparkles size={48} className="mx-auto mb-3 text-warm" />
-                    <p>Klicka på knappen ovan för att få personliga bokrekommendationer!</p>
+                    <p>{t('bookRecommendations.emptyState')}</p>
                 </div>
             )}
         </div>

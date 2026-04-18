@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import ChatInterface from '../components/ChatInterface';
 import BookRecommendationsList from '../components/BookRecommendationsList';
 import ModeSelector from '../components/ModeSelector';
-import { Sparkles, MessageCircleHeart } from 'lucide-react';
+import { Sparkles, MessageCircleHeart, Dices, RefreshCw } from 'lucide-react';
 
 import { useLanguage } from '../context/LanguageContext';
 import { useBibbi } from '../context/BibbiContext';
+import { getSurpriseRecommendation } from '../services/gemini';
+import { getUserProfile } from '../services/storage';
 
 const Recommendations = () => {
     const { t } = useLanguage();
@@ -16,6 +18,23 @@ const Recommendations = () => {
         tempo: 3,
         vibes: []
     });
+    const [surpriseBook, setSurpriseBook] = useState(null);
+    const [surpriseLoading, setSurpriseLoading] = useState(false);
+    const [surpriseError, setSurpriseError] = useState(null);
+
+    const handleSurprise = async () => {
+        setSurpriseLoading(true);
+        setSurpriseError(null);
+        try {
+            const profile = getUserProfile();
+            const result = await getSurpriseRecommendation(null, profile);
+            setSurpriseBook(result);
+        } catch (err) {
+            setSurpriseError(err?.message === 'no_api_key' ? t('recommendations.errorNoApiKey') : t('recommendations.errorWildcard'));
+        } finally {
+            setSurpriseLoading(false);
+        }
+    };
 
     useEffect(() => {
         setIsDocked(true);
@@ -98,8 +117,61 @@ const Recommendations = () => {
             </section>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6">
-                <div className="lg:col-span-5">
+                <div className="lg:col-span-5 space-y-5">
                     <BookRecommendationsList />
+
+                    {/* Kasta tärningen */}
+                    <div className="card p-5 border-dashed border-2 border-accent/20 bg-gradient-to-br from-bg-card to-bg-secondary/50">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Dices size={18} className="text-accent" />
+                            <h3 className="font-heading text-lg text-gray-900">{t('surprise.title')}</h3>
+                        </div>
+                        <p className="text-sm text-stone-500 mb-4">{t('surprise.intro')}</p>
+
+                        {!surpriseBook && !surpriseLoading && (
+                            <button
+                                onClick={handleSurprise}
+                                className="btn btn-primary w-full flex items-center justify-center gap-2"
+                            >
+                                <Dices size={18} />
+                                {t('surprise.button')}
+                            </button>
+                        )}
+
+                        {surpriseLoading && (
+                            <div className="flex items-center justify-center gap-2 py-4 text-accent text-sm">
+                                <RefreshCw size={16} className="animate-spin" />
+                                {t('surprise.loading')}
+                            </div>
+                        )}
+
+                        {surpriseError && (
+                            <p className="text-red-500 text-sm text-center py-2">{surpriseError}</p>
+                        )}
+
+                        {surpriseBook && !surpriseLoading && (
+                            <div className="space-y-3">
+                                <div className="rounded-xl border border-accent/20 bg-white/70 p-4">
+                                    <span className="inline-block text-xs font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full mb-2">
+                                        🎲 {t('surprise.label')}
+                                    </span>
+                                    <h4 className="font-heading text-base text-gray-900">{surpriseBook.title}</h4>
+                                    <p className="text-sm text-stone-600 mb-1">{surpriseBook.author}</p>
+                                    {surpriseBook.genre_specifics && (
+                                        <p className="text-xs text-stone-400 mb-2">{surpriseBook.genre_specifics}</p>
+                                    )}
+                                    <p className="text-sm text-stone-700 italic">{surpriseBook.reason}</p>
+                                </div>
+                                <button
+                                    onClick={handleSurprise}
+                                    className="btn btn-secondary w-full flex items-center justify-center gap-2 text-sm"
+                                >
+                                    <Dices size={16} />
+                                    {t('surprise.tryAgain')}
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="lg:col-span-7">

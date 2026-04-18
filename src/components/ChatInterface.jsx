@@ -21,7 +21,11 @@ const ChatInterface = ({ className, onClose }) => {
 
         const oldLabel = PREFERENCE_MAPS[type]?.[oldValue] || oldValue;
         const newLabel = PREFERENCE_MAPS[type]?.[newValue] || newValue;
-        const typeName = { tempo: 'Tempo', mood: 'Stämning', length: 'Längd' }[type] || type;
+        const typeName = {
+            tempo: t('modeSelector.tempo'),
+            mood: t('modeSelector.mood'),
+            length: t('modeSelector.length'),
+        }[type] || type;
 
         // Update modes
         const updatedModes = { ...modes, [type]: newValue };
@@ -178,7 +182,7 @@ const ChatInterface = ({ className, onClose }) => {
                 setMessages(prev => [...prev, {
                     id: Date.now() + 1,
                     sender: 'bibbi',
-                    text: 'Oj, något gick fel. Kan du försöka igen?'
+                    text: t('chat.errorMessage')
                 }]);
             }
         } finally {
@@ -197,7 +201,7 @@ const ChatInterface = ({ className, onClose }) => {
                     <div className="min-w-0">
                         <h3 className="font-heading font-bold text-gray-900 text-sm md:text-base truncate">{t('chat.bibbiName')}</h3>
                         <p className="text-xs text-accent font-medium truncate">
-                            {context?.type === 'book' ? `Pratar om: ${context.data.title}` : t('chat.bibbiRole')}
+                            {context?.type === 'book' ? `${t('chat.talkingAbout')} ${context.data.title}` : t('chat.bibbiRole')}
                         </p>
                     </div>
                 </div>
@@ -311,6 +315,7 @@ const ChatInterface = ({ className, onClose }) => {
 };
 
 const SuggestionCard = ({ msg, onAccept, onDismiss }) => {
+    const { t } = useLanguage();
     const [selected, setSelected] = useState({
         addAuthors: true,
         addGenres: true,
@@ -342,7 +347,7 @@ const SuggestionCard = ({ msg, onAccept, onDismiss }) => {
                     </div>
                     <div className="flex-grow">
                         <p className="text-sm text-blue-900 font-medium mb-1">
-                            Bibbi har ett förslag!
+                            {t('chat.suggestionTitle')}
                         </p>
                         <p className="text-sm text-blue-800 mb-3">
                             {msg.data.reason}
@@ -354,7 +359,7 @@ const SuggestionCard = ({ msg, onAccept, onDismiss }) => {
                                 <label className="flex items-start gap-2 text-xs text-blue-900 cursor-pointer bg-white/50 p-2 rounded hover:bg-white/80 transition-colors">
                                     <input type="checkbox" checked={selected.addAuthors} onChange={() => toggle('addAuthors')} className="mt-0.5 rounded text-blue-600 focus:ring-blue-400" />
                                     <div>
-                                        <span className="font-semibold">Lägg till i favoriter: </span>
+                                        <span className="font-semibold">{t('chat.addToFavorites')} </span>
                                         <span>{msg.data.favoriteAuthors.join(', ')}</span>
                                     </div>
                                 </label>
@@ -363,7 +368,7 @@ const SuggestionCard = ({ msg, onAccept, onDismiss }) => {
                                 <label className="flex items-start gap-2 text-xs text-blue-900 cursor-pointer bg-white/50 p-2 rounded hover:bg-white/80 transition-colors">
                                     <input type="checkbox" checked={selected.addGenres} onChange={() => toggle('addGenres')} className="mt-0.5 rounded text-blue-600 focus:ring-blue-400" />
                                     <div>
-                                        <span className="font-semibold">Lägg till i favoriter: </span>
+                                        <span className="font-semibold">{t('chat.addToFavorites')} </span>
                                         <span>{msg.data.favoriteGenres.join(', ')}</span>
                                     </div>
                                 </label>
@@ -373,7 +378,7 @@ const SuggestionCard = ({ msg, onAccept, onDismiss }) => {
                                 <label className="flex items-start gap-2 text-xs text-blue-900 cursor-pointer bg-white/50 p-2 rounded hover:bg-white/80 transition-colors">
                                     <input type="checkbox" checked={selected.removeAuthors} onChange={() => toggle('removeAuthors')} className="mt-0.5 rounded text-blue-600 focus:ring-blue-400" />
                                     <div>
-                                        <span className="font-semibold text-orange-700">Ta bort från favoriter: </span>
+                                        <span className="font-semibold text-orange-700">{t('chat.removeFromFavorites')} </span>
                                         <span>{msg.data.removeFromFavorites.authors.join(', ')}</span>
                                     </div>
                                 </label>
@@ -382,7 +387,7 @@ const SuggestionCard = ({ msg, onAccept, onDismiss }) => {
                                 <label className="flex items-start gap-2 text-xs text-blue-900 cursor-pointer bg-white/50 p-2 rounded hover:bg-white/80 transition-colors">
                                     <input type="checkbox" checked={selected.removeGenres} onChange={() => toggle('removeGenres')} className="mt-0.5 rounded text-blue-600 focus:ring-blue-400" />
                                     <div>
-                                        <span className="font-semibold text-orange-700">Ta bort från favoriter: </span>
+                                        <span className="font-semibold text-orange-700">{t('chat.removeFromFavorites')} </span>
                                         <span>{msg.data.removeFromFavorites.genres.join(', ')}</span>
                                     </div>
                                 </label>
@@ -392,7 +397,7 @@ const SuggestionCard = ({ msg, onAccept, onDismiss }) => {
                                 <label className="flex items-start gap-2 text-xs text-blue-900 cursor-pointer bg-white/50 p-2 rounded hover:bg-white/80 transition-colors">
                                     <input type="checkbox" checked={selected.blockAuthors} onChange={() => toggle('blockAuthors')} className="mt-0.5 rounded text-blue-600 focus:ring-blue-400" />
                                     <div>
-                                        <span className="font-semibold text-red-600">Blockera författare: </span>
+                                        <span className="font-semibold text-red-600">{t('chat.blockAuthor')} </span>
                                         <span>{msg.data.blocklist.authors.join(', ')}</span>
                                     </div>
                                 </label>
@@ -401,7 +406,7 @@ const SuggestionCard = ({ msg, onAccept, onDismiss }) => {
                                 <label className="flex items-start gap-2 text-xs text-blue-900 cursor-pointer bg-white/50 p-2 rounded hover:bg-white/80 transition-colors">
                                     <input type="checkbox" checked={selected.blockGenres} onChange={() => toggle('blockGenres')} className="mt-0.5 rounded text-blue-600 focus:ring-blue-400" />
                                     <div>
-                                        <span className="font-semibold text-red-600">Blockera genrer: </span>
+                                        <span className="font-semibold text-red-600">{t('chat.blockGenres')} </span>
                                         <span>{msg.data.blocklist.genres.join(', ')}</span>
                                     </div>
                                 </label>
@@ -411,7 +416,7 @@ const SuggestionCard = ({ msg, onAccept, onDismiss }) => {
                                 <label className="flex items-start gap-2 text-xs text-blue-900 cursor-pointer bg-white/50 p-2 rounded hover:bg-white/80 transition-colors">
                                     <input type="checkbox" checked={selected.unblockAuthors} onChange={() => toggle('unblockAuthors')} className="mt-0.5 rounded text-blue-600 focus:ring-blue-400" />
                                     <div>
-                                        <span className="font-semibold text-green-600">Ta bort från blocklista: </span>
+                                        <span className="font-semibold text-green-600">{t('chat.removeFromBlocklist')} </span>
                                         <span>{msg.data.removeFromBlocklist.authors.join(', ')}</span>
                                     </div>
                                 </label>
@@ -420,7 +425,7 @@ const SuggestionCard = ({ msg, onAccept, onDismiss }) => {
                                 <label className="flex items-start gap-2 text-xs text-blue-900 cursor-pointer bg-white/50 p-2 rounded hover:bg-white/80 transition-colors">
                                     <input type="checkbox" checked={selected.unblockGenres} onChange={() => toggle('unblockGenres')} className="mt-0.5 rounded text-blue-600 focus:ring-blue-400" />
                                     <div>
-                                        <span className="font-semibold text-green-600">Ta bort från blocklista: </span>
+                                        <span className="font-semibold text-green-600">{t('chat.removeFromBlocklist')} </span>
                                         <span>{msg.data.removeFromBlocklist.genres.join(', ')}</span>
                                     </div>
                                 </label>
@@ -434,20 +439,20 @@ const SuggestionCard = ({ msg, onAccept, onDismiss }) => {
                                     className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-colors"
                                 >
                                     <Check size={14} />
-                                    Ja, spara
+                                    {t('chat.confirmYes')}
                                 </button>
                                 <button
                                     onClick={onDismiss}
                                     className="flex items-center gap-1 px-3 py-1.5 bg-white text-blue-600 border border-blue-200 text-xs font-medium rounded-md hover:bg-blue-50 transition-colors"
                                 >
                                     <X size={14} />
-                                    Nej tack
+                                    {t('chat.confirmNo')}
                                 </button>
                             </div>
                         ) : (
                             <div className="flex items-center gap-2 text-green-600 text-sm font-medium">
                                 <Check size={16} />
-                                <span>Profil uppdaterad!</span>
+                                <span>{t('chat.profileUpdated')}</span>
                             </div>
                         )}
                     </div>

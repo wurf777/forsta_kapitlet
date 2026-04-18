@@ -37,7 +37,7 @@ const Contact = () => {
             }
         } catch (err) {
             setStatus('error');
-            setErrorMessage(`Kunde inte skicka meddelandet: ${err.message}`);
+            setErrorMessage(`${t('contact.errorSend')} ${err.message}`);
         }
     };
 
@@ -55,10 +55,10 @@ const Contact = () => {
                     <Mail size={32} className="text-accent" />
                 </div>
                 <h1 className="text-4xl font-heading font-bold text-gray-900 mb-4">
-                    Kontakta oss
+                    {t('contact.title')}
                 </h1>
                 <p className="text-lg text-gray-600 leading-relaxed">
-                    Har du frågor, feedback eller vill veta mer om Första kapitlet? Skicka ett meddelande så hör vi av oss!
+                    {t('contact.subtitle')}
                 </p>
             </div>
 
@@ -68,16 +68,16 @@ const Contact = () => {
                         <CheckCircle size={32} className="text-green-600" />
                     </div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                        Tack för ditt meddelande!
+                        {t('contact.successTitle')}
                     </h3>
                     <p className="text-gray-700 mb-4">
-                        Vi har tagit emot ditt meddelande och kommer att svara så snart vi kan.
+                        {t('contact.successBody')}
                     </p>
                     <button
                         onClick={() => setStatus('idle')}
                         className="text-accent hover:underline font-medium"
                     >
-                        Skicka ett nytt meddelande
+                        {t('contact.sendAnother')}
                     </button>
                 </div>
             ) : (
@@ -92,7 +92,7 @@ const Contact = () => {
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Namn
+                                {t('contact.nameLabel')}
                             </label>
                             <div className="relative">
                                 <User size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -103,14 +103,14 @@ const Contact = () => {
                                     onChange={handleChange}
                                     required
                                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
-                                    placeholder="Ditt namn"
+                                    placeholder={t('contact.namePlaceholder')}
                                 />
                             </div>
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                E-postadress
+                                {t('contact.emailLabel')}
                             </label>
                             <div className="relative">
                                 <Mail size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -128,7 +128,7 @@ const Contact = () => {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Ditt meddelande
+                                {t('contact.messageLabel')}
                             </label>
                             <div className="relative">
                                 <MessageSquare size={20} className="absolute left-3 top-3 text-gray-400" />
@@ -139,7 +139,7 @@ const Contact = () => {
                                     required
                                     rows={4}
                                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 resize-none"
-                                    placeholder="Ställ en fråga, ge feedback eller berätta vad du tycker..."
+                                    placeholder={t('contact.messagePlaceholder')}
                                 />
                             </div>
                         </div>
@@ -149,12 +149,12 @@ const Contact = () => {
                             disabled={status === 'loading'}
                             className="w-full btn btn-primary py-3 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {status === 'loading' ? 'Skickar...' : 'Skicka meddelande'}
+                            {status === 'loading' ? t('contact.submitting') : t('contact.submit')}
                         </button>
                     </form>
 
                     <p className="mt-6 text-xs text-gray-500 text-center">
-                        Vi svarar vanligtvis inom ett par dagar.
+                        {t('contact.replyNote')}
                     </p>
                 </div>
             )}

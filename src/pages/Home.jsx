@@ -179,22 +179,22 @@ const Home = () => {
                         <div className="w-12 h-12 bg-accent/15 rounded-full flex items-center justify-center mx-auto mb-4 text-accent">
                             <Book size={24} />
                         </div>
-                        <h3 className="text-lg font-bold mb-2">Spara dina böcker</h3>
-                        <p className="text-stone-600 text-sm md:text-base">Samla allt du läser, vill läsa och har läst på ett ställe.</p>
+                        <h3 className="text-lg font-bold mb-2">{t('home.featureCards.saveTitle')}</h3>
+                        <p className="text-stone-600 text-sm md:text-base">{t('home.featureCards.saveBody')}</p>
                     </div>
                     <div className="card p-5 md:p-6">
                         <div className="w-12 h-12 bg-warm/20 rounded-full flex items-center justify-center mx-auto mb-4 text-warm-dark">
                             <Sparkles size={24} />
                         </div>
-                        <h3 className="text-lg font-bold mb-2">AI-rekommendationer</h3>
-                        <p className="text-stone-600 text-sm md:text-base">Få personliga boktips från vår AI-bibliotekarie Bibbi.</p>
+                        <h3 className="text-lg font-bold mb-2">{t('home.featureCards.aiTitle')}</h3>
+                        <p className="text-stone-600 text-sm md:text-base">{t('home.featureCards.aiBody')}</p>
                     </div>
                     <div className="card p-5 md:p-6 sm:col-span-2 md:col-span-1">
                         <div className="w-12 h-12 bg-highlight/20 rounded-full flex items-center justify-center mx-auto mb-4 text-highlight">
                             <Star size={24} />
                         </div>
-                        <h3 className="text-lg font-bold mb-2">Betygsätt & Recensera</h3>
-                        <p className="text-stone-600 text-sm md:text-base">Sätt betyg och skriv egna anteckningar om dina läsupplevelser.</p>
+                        <h3 className="text-lg font-bold mb-2">{t('home.featureCards.rateTitle')}</h3>
+                        <p className="text-stone-600 text-sm md:text-base">{t('home.featureCards.rateBody')}</p>
                     </div>
                 </section>
 

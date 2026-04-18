@@ -177,7 +177,9 @@ export const getBookRecommendations = async (userBooks = null, profile = null, c
             ? `\nEXKLUDERA dessa titlar (föreslå INTE dessa böcker):\n${excludeTitles.map(t => `- ${t}`).join('\n')}`
             : '';
 
-        const prompt = `Baserat på följande boklista och användarprofil, ge mig ${count} nya bokrekommendationer som användaren skulle uppskatta.
+        const seed = Math.random().toString(36).slice(2, 7);
+
+        const prompt = `Baserat på följande boklista och användarprofil, ge mig ${count} nya bokrekommendationer som användaren skulle uppskatta. [${seed}]
 
 ANVÄNDARENS BOKLISTA:
 ${bookList}${profileContext}${excludeSection}
@@ -406,6 +408,56 @@ Svara ENDAST med JSON:
     } catch (error) {
         console.error('Error getting daily tip:', error);
         return null;
+    }
+};
+
+/**
+ * Get a wildcard book recommendation outside the user's usual patterns
+ */
+export const getSurpriseRecommendation = async (userLibrary = null, profile = null) => {
+    try {
+        const library = userLibrary || await getLibrary();
+
+        const knownGenres = [...new Set(library.flatMap(b => b.categories || []))].slice(0, 8);
+        const ownedTitles = library.map(b => b.title);
+        const blockAuthors = profile?.blocklist?.authors?.length > 0
+            ? `\nBLOCKERADE FÖRFATTARE (föreslå ALDRIG): ${profile.blocklist.authors.join(', ')}` : '';
+        const blockGenres = profile?.blocklist?.genres?.length > 0
+            ? `\nBLOCKERADE GENRER (föreslå ALDRIG): ${profile.blocklist.genres.join(', ')}` : '';
+
+        const seed = Math.random().toString(36).slice(2, 7);
+
+        const prompt = `Du är Bibbi. Ge EN bok som ett vildkort – något användaren INTE skulle välja själv. [${seed}]
+
+ANVÄNDARENS VANLIGA GENRER (undvik dessa aktivt): ${knownGenres.join(', ') || 'okänt'}
+BÖCKER ANVÄNDAREN REDAN HAR (ge aldrig dessa): ${ownedTitles.slice(0, 30).join(', ')}${blockAuthors}${blockGenres}
+
+Välj något från en genre, era eller kultur som användaren troligen inte utforskat. Det kan vara klassisk litteratur, en annan kulturs berättartradition, facklitteratur, poesi, grafisk roman, eller vad som helst som är genuint annorlunda men fortfarande läsvärt och välkänt nog att vara tillgängligt.
+
+Svara ENDAST med JSON:
+{
+  "title": "Boktitel",
+  "author": "Författarnamn",
+  "reason": "Varför detta är ett bra vildkort (1-2 meningar)",
+  "genre_specifics": "Genre"
+}`;
+
+        const response = await api.ai.generate(
+            [{ role: 'user', parts: [{ text: prompt }] }],
+            null,
+            { temperature: 1.0, maxOutputTokens: 256 }
+        );
+
+        const text = response.text.replace(/```(?:json)?\s*/g, '').trim();
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error('Kunde inte tolka svaret från AI');
+
+        const result = JSON.parse(jsonMatch[0]);
+        track('bibbi', 'surprise_recommendation', {});
+        return result;
+
+    } catch (error) {
+        handleApiError(error);
     }
 };
 
